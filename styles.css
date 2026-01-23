@@ -1,0 +1,181 @@
+/* ==========================================================================
+   1. CẤU TRÚC TỔNG THỂ (LAYOUT CONTAINER)
+   ========================================================================== */
+:root {
+    --primary-blue: #0047ff;
+    --alarm-red: #ff3c3c;
+    --text-dark: #333333;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    /* Giữ lại shadow cho nhãn nhưng xóa cho container bản đồ */
+    --shadow-label: 0 4px 15px rgba(0, 0, 0, 0.08); 
+}
+
+.solution-advanced-map-comp {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #ffffff; /* Đảm bảo nền trắng tinh khiết */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Tiêu đề trang */
+.solution-advanced-map-title {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.solution-advanced-map-title .sub-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.solution-advanced-map-title .main-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+/* ==========================================================================
+   2. KHU VỰC BẢN ĐỒ (XÓA BORDER VÀ SHADOW TẠI ĐÂY)
+   ========================================================================== */
+.map-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    background: transparent; /* SỬA: Để nền trong suốt */
+    border-radius: 0;         /* SỬA: Xóa bo góc ngoài */
+    box-shadow: none;          /* QUAN TRỌNG: Xóa bóng đổ bao quanh */
+    padding: 0;               /* SỬA: Xóa padding thừa để ảnh sát lề */
+    transition: transform 0.3s ease;
+}
+
+.map-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;      /* Giữ tỉ lệ chuẩn để marker không lệch */
+    overflow: visible;         /* SỬA: Để nhãn có thể hiển thị tràn ra ngoài */
+}
+
+.img-box {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;       /* SỬA: Tiệp màu với nền trang */
+}
+
+.img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+}
+
+/* ==========================================================================
+   3. HỆ THỐNG ĐIỂM ĐÁNH DẤU (MARKERS & LABELS)
+   ========================================================================== */
+.marker-box {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    list-style: none;
+    padding: 0; margin: 0;
+    pointer-events: none;
+}
+
+.marker.at-action {
+    position: absolute;
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    pointer-events: auto;
+    z-index: 10;
+    transform: translate(-16px, -16px); /* Căn tâm khớp với vòng tròn 32px */
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.marker .text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--primary-blue);
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 10px rgba(0, 71, 255, 0.3);
+    z-index: 2;
+    flex-shrink: 0;
+    animation: pulse-blue 2s infinite;
+}
+
+.marker .topic {
+    margin-left: -12px; 
+    opacity: 1;
+    visibility: visible;
+}
+
+.glass-label {
+    background: #ffffff;       /* Nền nhãn trắng rõ ràng */
+    color: var(--text-dark);
+    padding: 6px 18px 6px 24px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid #f0f0f0;  /* Viền nhãn cực mảnh */
+    box-shadow: var(--shadow-label);
+    display: block;
+}
+
+/* ==========================================================================
+   4. TƯƠNG TÁC VÀ HIỆU ỨNG
+   ========================================================================== */
+.marker:hover {
+    z-index: 20;
+    transform: translate(-16px, -16px) scale(1.05);
+}
+
+.marker:hover .text {
+    background: var(--alarm-red);
+    animation: pulse-red 1s infinite;
+}
+
+.marker:hover .glass-label {
+    color: var(--alarm-red);
+    border-color: var(--alarm-red);
+}
+
+@keyframes pulse-blue {
+    0% { box-shadow: 0 0 0 0 rgba(0, 71, 255, 0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 71, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 71, 255, 0); }
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(255, 60, 60, 0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 60, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 60, 60, 0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .solution-advanced-map-title .main-title { font-size: 28px; }
+    .marker .text { width: 26px; height: 26px; font-size: 11px; }
+    .glass-label { font-size: 11px; padding: 4px 12px 4px 18px; }
+}
