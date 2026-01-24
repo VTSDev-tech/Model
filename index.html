@@ -1,14 +1,73 @@
 <div class="solution-advanced-map-comp">
+    <div id="page-transition-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out; z-index: 9999;"></div>
+
+    <link rel="preload" as="image" href="img/image.jpg">
+    
+    <style>
+        .solution-advanced-map-title, .marker-box {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .solution-advanced-map-comp.loaded .solution-advanced-map-title,
+        .solution-advanced-map-comp.loaded .marker-box {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .marker.at-action {
+            transform: translate(-60px, 0px); 
+        }
+
+        .marker.at-action a {
+            display: flex !important;
+            flex-direction: row;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .marker .topic {
+            margin-left: -18px; 
+        }
+        .glass-label {
+            padding: 4px 14px 4px 22px; 
+        }
+    </style>
+
+    <script>
+        function transitionToPage(event, url) {
+            event.preventDefault(); // Chặn chuyển trang ngay lập tức
+            const overlay = document.getElementById('page-transition-overlay');
+            
+            // Kích hoạt lớp phủ trắng mờ dần lên
+            overlay.style.opacity = '1';
+            overlay.style.pointerEvents = 'auto';
+            
+            // Đợi hiệu ứng hoàn tất (500ms) rồi mới chuyển link
+            setTimeout(() => {
+                window.location.href = url;
+            }, 500);
+        }
+    </script>
+
     <div class="solution-advanced-map-title">
         <p class="sub-title">Adarder-title hl</p>
-        <h2 class="main-title">Advanced applications</h2>
+        <h2 class="main-title">THU GROUP SYSTEM</h2>
     </div>
-    <head><link rel="stylesheet" href="styles.css"></head>
+    
+    <head>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
 
     <div class="map-wrapper">
         <div class="map-container">
             <div class="img-box">
-                <img class="lazy" src="img/image.jpg" alt="solution advanced map">
+                <img src="img/image.jpg" 
+                     alt="solution advanced map" 
+                     loading="eager" 
+                     onload="this.closest('.solution-advanced-map-comp').classList.add('loaded')">
             </div>
 
             <ul class="marker-box">
@@ -20,7 +79,7 @@
                 </li>
 
                 <li class="marker at-action" data-at-module="solution_advanced_map::Central Office" style="left: 32.2%; top: 36.5%;">
-                    <a href="camera system.html" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
+                    <a href="camera system.html" onclick="transitionToPage(event, 'camera system.html')">
                         <span class="text">2</span>
                         <div class="topic">
                             <div class="glass-label">ORANGE MANAGEMENT</div>
@@ -52,3 +111,4 @@
         </div>
     </div>
 </div>
+<script src="js/script.js"></script>

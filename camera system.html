@@ -6,7 +6,7 @@
     <title id="page-title">Hệ Thống Quản Lý Camera</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/_sdk/element_sdk.js"></script>
-    <link rel="stylesheet" href="camera.css" />
+    <link rel="stylesheet" href="css/camera.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       .sidebar-item.active {
@@ -21,9 +21,21 @@
         50% { opacity: 0.4; }
         100% { opacity: 1; }
       }
+
+      /* --- CHÈN THÊM CSS HIỆU ỨNG --- */
+      #transition-overlay {
+        position: fixed;
+        inset: 0;
+        background: white;
+        z-index: 10000;
+        transition: opacity 0.5s ease-in-out;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body class="h-full bg-gray-100 m-0 p-0">
+    <div id="transition-overlay" style="opacity: 1;"></div>
+
     <div id="app" class="h-full w-full flex flex-col overflow-auto">
       <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
         <div class="flex items-center gap-4">
@@ -43,8 +55,11 @@
             <span>Hệ thống hoạt động bình thường</span>
           </div>
           <div class="text-sm text-gray-500 font-mono" id="current-time">--:--:--</div>
-          <a href="index.html" class="ml-4 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 transition no-underline">
-           Back
+          
+          <a href="index.html" 
+             onclick="handleBackTransition(event, 'index.html')"
+             class="ml-4 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 transition no-underline">
+            Back
           </a>
         </div>
       </header>
@@ -177,6 +192,27 @@
       </div>
     </div>
 
-    <script src="camera-system.js"></script>
+    <script>
+      // Fade in khi vào trang
+      window.addEventListener('load', () => {
+        const overlay = document.getElementById('transition-overlay');
+        setTimeout(() => {
+          overlay.style.opacity = '0';
+        }, 100);
+      });
+
+      // Fade out khi nhấn nút Back
+      function handleBackTransition(event, url) {
+        event.preventDefault();
+        const overlay = document.getElementById('transition-overlay');
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'auto';
+        setTimeout(() => {
+          window.location.href = url;
+        }, 500);
+      }
+    </script>
+
+    <script src="js/camera-system.js"></script>
   </body>
 </html>

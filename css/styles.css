@@ -97,7 +97,8 @@
     align-items: center;
     pointer-events: auto;
     z-index: 10;
-    transform: translate(-16px, -16px); /* Căn tâm khớp với vòng tròn 32px */
+    /* CHỈNH SỬA: Tăng giá trị âm để kéo toàn bộ cụm sát vào tòa nhà bên trái và xuống dưới */
+    transform: translate(-60px, 0px); 
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -106,45 +107,45 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 28px; /* Thu nhỏ một chút để bớt chiếm diện tích */
+    height: 28px;
     background: var(--primary-blue);
     color: #ffffff;
     border-radius: 50%;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     border: 2px solid #ffffff;
     box-shadow: 0 0 10px rgba(0, 71, 255, 0.3);
-    z-index: 2;
+    z-index: 5;
     flex-shrink: 0;
     animation: pulse-blue 2s infinite;
 }
 
 .marker .topic {
-    margin-left: -16px; /* SỬA: Tăng độ âm để nhãn đè lên marker nhiều hơn, thu ngắn khoảng cách */
+    /* CHỈNH SỬA: Kéo nhãn đè sâu lên marker để thu hẹp khoảng cách trắng */
+    margin-left: -18px; 
     opacity: 1;
     visibility: visible;
 }
 
 .glass-label {
-    background: #ffffff;       /* Nền nhãn trắng rõ ràng */
+    background: #ffffff;
     color: var(--text-dark);
-    padding: 6px 18px 6px 22px; /* SỬA: Giảm padding-left một chút để chữ sát hơn */
-    border-radius: 25px;
-    font-size: 13px;
+    /* CHỈNH SỬA: Giảm padding để nhãn ngắn gọn và sát marker hơn */
+    padding: 4px 14px 4px 22px; 
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
-    border: 1px solid #f0f0f0;  /* Viền nhãn cực mảnh */
+    border: 1px solid #f0f0f0;
     box-shadow: var(--shadow-label);
     display: block;
 }
 
-/* ==========================================================================
-   4. TƯƠNG TÁC VÀ HIỆU ỨNG
-   ========================================================================== */
+
 .marker:hover {
     z-index: 20;
-    transform: translate(-16px, -16px) scale(1.05);
+    transform: translate(-60px, 0px) scale(1.05);
 }
 
 .marker:hover .text {
@@ -176,6 +177,6 @@
 
 @media (max-width: 768px) {
     .solution-advanced-map-title .main-title { font-size: 28px; }
-    .marker .text { width: 26px; height: 26px; font-size: 11px; }
+    .marker .text { width: 24px; height: 24px; font-size: 11px; }
     .glass-label { font-size: 11px; padding: 4px 12px 4px 18px; }
 }
