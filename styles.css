@@ -121,7 +121,7 @@
 }
 
 .marker .topic {
-    margin-left: -12px; 
+    margin-left: -16px; /* SỬA: Tăng độ âm để nhãn đè lên marker nhiều hơn, thu ngắn khoảng cách */
     opacity: 1;
     visibility: visible;
 }
@@ -129,7 +129,7 @@
 .glass-label {
     background: #ffffff;       /* Nền nhãn trắng rõ ràng */
     color: var(--text-dark);
-    padding: 6px 18px 6px 24px;
+    padding: 6px 18px 6px 22px; /* SỬA: Giảm padding-left một chút để chữ sát hơn */
     border-radius: 25px;
     font-size: 13px;
     font-weight: 600;
