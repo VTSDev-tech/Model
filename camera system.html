@@ -1,218 +1,255 @@
 <!DOCTYPE html>
 <html lang="vi" class="h-full">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title id="page-title">Hệ Thống Quản Lý Camera</title>
+    <title id="page-title">Hệ Thống Quản Lý Camera | ORANGE MANAGEMENT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/_sdk/element_sdk.js"></script>
     <link rel="stylesheet" href="css/camera.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
     <style>
-      .sidebar-item.active {
-        background-color: #f0f9ff;
-        border-left: 4px solid #0284c7;
-      }
-      .recording-dot {
-        animation: pulse 1.5s infinite;
-      }
-      @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.4; }
-        100% { opacity: 1; }
-      }
+        .sidebar-item.active {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0284c7;
+        }
+        .recording-dot {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
 
-      /* --- CHÈN THÊM CSS HIỆU ỨNG --- */
-      #transition-overlay {
-        position: fixed;
-        inset: 0;
-        background: white;
-        z-index: 10000;
-        transition: opacity 0.5s ease-in-out;
-        pointer-events: none;
-      }
+        #transition-overlay {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 10000;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
     </style>
-  </head>
-  <body class="h-full bg-gray-100 m-0 p-0">
+</head>
+
+<body class="h-full bg-gray-100 m-0 p-0">
     <div id="transition-overlay" style="opacity: 1;"></div>
 
     <div id="app" class="h-full w-full flex flex-col overflow-auto">
-      <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
-        <div class="flex items-center gap-4">
-          <div class="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <h1 id="system-title" class="text-xl font-semibold text-gray-800">ORANGE MANAGEMENT</h1>
-            <p class="text-sm text-gray-500">Giám sát an ninh tập trung</p>
-          </div>
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 id="system-title" class="text-xl font-semibold text-gray-800 uppercase">ORANGE MANAGEMENT</h1>
+                    <p class="text-sm text-gray-500">Giám sát an ninh tập trung</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <span>Hệ thống trực tuyến</span>
+                </div>
+                <div class="text-sm text-gray-500 font-mono bg-gray-100 px-3 py-1 rounded" id="current-time">--:--:--</div>
+                
+                <a href="index.html" 
+                   onclick="handleBackTransition(event, 'index.html')"
+                   class="ml-4 px-4 py-2 bg-gray-800 hover:bg-black text-white rounded-lg text-xs font-medium transition flex items-center gap-2">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Back
+                </a>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+            <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto">
+                <nav class="p-4">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-4">Menu điều khiển</p>
+                    
+                    <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-700 transition" onclick="showPage('departments')">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span class="font-medium">Quản lý phòng ban</span>
+                    </button>
+
+                    <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-700 transition" onclick="showPage('parking')">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        <span class="font-medium">Quản lý bãi đỗ xe</span>
+                    </button>
+
+                    <button id="warehouse-btn" class="sidebar-item active w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-700 transition" onclick="showPage('warehouse')">
+                        <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span class="font-medium text-sky-700">Quản lý nhà kho</span>
+                    </button>
+
+                    <div class="border-t border-gray-200 my-4"></div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-4">Tính năng nâng cao</p>
+                    
+                    <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-400 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <span class="font-medium">Báo cáo & Thống kê</span>
+                    </button>
+
+                    <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-400 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span class="font-medium">Lịch sử ghi hình</span>
+                    </button>
+
+                    <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-400 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        <span class="font-medium">Cảnh báo hệ thống</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="flex-1 overflow-y-auto bg-gray-50">
+                <div id="warehouse-page" class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 id="warehouse-title" class="text-2xl font-semibold text-gray-800">Camera Nhà Kho</h2>
+                            <p class="text-gray-500 mt-1 italic">Đang tải dữ liệu giám sát trực tuyến...</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm focus:ring-2 focus:ring-sky-500 outline-none shadow-sm">
+                                <option>Tất cả khu vực</option>
+                                <option>Khu A - Hàng nhập</option>
+                                <option>Khu B - Hàng xuất</option>
+                                <option>Khu C - Lưu trữ</option>
+                            </select>
+                            <button class="px-4 py-2 bg-sky-600 text-white rounded-lg text-sm font-medium hover:bg-sky-700 flex items-center gap-2 transition shadow-md">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                                TOÀN MÀN HÌNH
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="camera-grid">
+                    </div>
+
+                    <div class="mt-6 bg-white rounded-xl p-4 border border-gray-200 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-6">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                                <span class="text-sm text-gray-600 font-medium">Hoạt động: <strong class="text-gray-900">9</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                                <span class="text-sm text-gray-600 font-medium">Cảnh báo: <strong class="text-red-600">1</strong></span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            Băng thông: <strong class="text-gray-800">124 Mbps</strong> | Dung lượng: <strong class="text-gray-800">2.4 TB / 8 TB</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="departments-page" class="p-6 hidden">
+                    <div class="flex flex-col items-center justify-center h-96 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-600">Module Quản Lý Phòng Ban</h3>
+                        <p class="text-gray-400 mt-2 italic">Dữ liệu đang được đồng bộ hóa từ Cloud...</p>
+                    </div>
+                </div>
+
+                <div id="parking-page" class="p-6 hidden">
+                    <div class="flex flex-col items-center justify-center h-96 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-600">Module Quản Lý Bãi Đỗ Xe</h3>
+                        <p class="text-gray-400 mt-2 italic">Tính năng này yêu cầu quyền quản trị cấp cao.</p>
+                    </div>
+                </div>
+            </main>
         </div>
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2 text-sm text-gray-600">
-            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span>Hệ thống hoạt động bình thường</span>
-          </div>
-          <div class="text-sm text-gray-500 font-mono" id="current-time">--:--:--</div>
-          
-          <a href="index.html" 
-             onclick="handleBackTransition(event, 'index.html')"
-             class="ml-4 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 transition no-underline">
-            Back
-          </a>
-        </div>
-      </header>
+    </div>
 
-      <div class="flex flex-1 overflow-hidden">
-        <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto">
-          <nav class="p-4">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Menu chính</p>
-            
-            <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-700 transition" onclick="showPage('departments')">
-              <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <span class="font-medium">Quản lý phòng ban</span>
-            </button>
-
-            <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-700 transition" onclick="showPage('parking')">
-              <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
-              <span class="font-medium">Quản lý bãi đỗ xe</span>
-            </button>
-
-            <button id="warehouse-btn" class="sidebar-item active w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-700 transition" onclick="showPage('warehouse')">
-              <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <span class="font-medium text-sky-700">Quản lý nhà kho</span>
-            </button>
-
-            <div class="border-t border-gray-200 my-4"></div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Khác</p>
-            
-            <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-400" disabled>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span class="font-medium">Báo cáo thống kê</span>
-            </button>
-
-            <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-400" disabled>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span class="font-medium">Lịch sử ghi hình</span>
-            </button>
-
-            <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-400" disabled>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span class="font-medium">Cảnh báo</span>
-            </button>
-
-            <button class="sidebar-item w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 text-gray-400" disabled>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <circle cx="12" cy="12" r="3" stroke-width="2" />
-              </svg>
-              <span class="font-medium">Cài đặt</span>
-            </button>
-          </nav>
-        </aside>
-
-        <main class="flex-1 overflow-y-auto bg-gray-50">
-          <div id="warehouse-page" class="p-6">
-            <div class="flex items-center justify-between mb-6">
-              <div>
-                <h2 id="warehouse-title" class="text-2xl font-semibold text-gray-800">Camera Nhà Kho</h2>
-                <p class="text-gray-500 mt-1">Hệ thống đang giám sát trực tuyến</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <select class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
-                  <option>Tất cả khu vực</option>
-                  <option>Khu A - Hàng nhập</option>
-                  <option>Khu B - Hàng xuất</option>
-                  <option>Khu C - Lưu trữ</option>
-                </select>
-                <button class="px-4 py-2 bg-sky-600 text-white rounded-lg text-sm font-medium hover:bg-sky-700 flex items-center gap-2 transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                  Toàn màn hình
+    <div id="camera-modal" class="cam-modal" aria-hidden="true">
+        <div class="cam-modal__backdrop" data-close="true"></div>
+        <div class="cam-modal__panel">
+            <div class="cam-modal__header">
+                <div>
+                    <h3 id="modal-cam-name" class="cam-modal__title">--</h3>
+                    <p id="modal-cam-meta" class="cam-modal__meta">--</p>
+                </div>
+                <button id="cam-modal-close" class="cam-modal__close" title="Đóng">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-              </div>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="camera-grid">
-              </div>
-
-            <div class="mt-6 bg-white rounded-xl p-4 border border-gray-200 flex items-center justify-between">
-              <div class="flex items-center gap-6">
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 bg-green-500 rounded-full"></span>
-                  <span class="text-sm text-gray-600">Hoạt động: <strong class="text-gray-800">9</strong></span>
+            <div class="cam-modal__videoWrap">
+                <video id="modal-video" class="cam-modal__video" autoplay muted loop playsinline></video>
+                <div id="modal-offline" class="cam-modal__offline hidden">
+                    <div class="text-center">
+                        <svg class="w-20 h-20 text-gray-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"></path></svg>
+                        <p class="text-gray-400 text-lg font-medium">Mất tín hiệu</p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                  <span class="text-sm text-gray-600">Cảnh báo: <strong class="text-red-600">1</strong></span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 bg-gray-400 rounded-full"></span>
-                  <span class="text-sm text-gray-600">Mất kết nối: <strong class="text-gray-800">2</strong></span>
-                </div>
-              </div>
-              <div class="text-sm text-gray-500">
-                Lưu trữ: <strong class="text-gray-800">2.4 TB / 8 TB</strong>
-              </div>
+                <div id="modal-time" class="cam-modal__time">--</div>
+                <div id="modal-status" class="cam-modal__status">--</div>
             </div>
-          </div>
-
-          <div id="departments-page" class="p-6 hidden">
-             <div class="flex items-center justify-center h-96 bg-white rounded-xl border border-dashed border-gray-300">
-                <div class="text-center">
-                  <h3 class="text-lg font-medium text-gray-600">Quản lý phòng ban</h3>
-                  <p class="text-gray-400 mt-1">Chức năng đang phát triển...</p>
-                </div>
-             </div>
-          </div>
-
-          <div id="parking-page" class="p-6 hidden">
-            <div class="flex items-center justify-center h-96 bg-white rounded-xl border border-dashed border-gray-300">
-               <div class="text-center">
-                 <h3 class="text-lg font-medium text-gray-600">Quản lý bãi đỗ xe</h3>
-                 <p class="text-gray-400 mt-1">Chức năng đang phát triển...</p>
-               </div>
-            </div>
-          </div>
-        </main>
-      </div>
+        </div>
     </div>
 
     <script>
-      // Fade in khi vào trang
-      window.addEventListener('load', () => {
-        const overlay = document.getElementById('transition-overlay');
-        setTimeout(() => {
-          overlay.style.opacity = '0';
-        }, 100);
-      });
+        window.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.getElementById('transition-overlay');
+            setTimeout(() => {
+                if(overlay) overlay.style.opacity = '0';
+            }, 300);
+        });
 
-      // Fade out khi nhấn nút Back
-      function handleBackTransition(event, url) {
-        event.preventDefault();
-        const overlay = document.getElementById('transition-overlay');
-        overlay.style.opacity = '1';
-        overlay.style.pointerEvents = 'auto';
-        setTimeout(() => {
-          window.location.href = url;
-        }, 500);
-      }
+        function handleBackTransition(event, url) {
+            event.preventDefault();
+            const overlay = document.getElementById('transition-overlay');
+            if(overlay) {
+                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+            }
+            setTimeout(() => {
+                window.location.href = url;
+            }, 500);
+        }
+
+        function showPage(pageId) {
+            const pages = ['warehouse-page', 'departments-page', 'parking-page'];
+            pages.forEach(p => {
+                const el = document.getElementById(p);
+                if(el) el.classList.add('hidden');
+            });
+            
+            const target = document.getElementById(pageId + '-page');
+            if(target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.sidebar-item').forEach(btn => {
+                btn.classList.remove('active');
+                const svg = btn.querySelector('svg');
+                if(svg) svg.classList.replace('text-sky-600', 'text-gray-500');
+            });
+            
+            const currentBtn = event.currentTarget;
+            currentBtn.classList.add('active');
+            const currentSvg = currentBtn.querySelector('svg');
+            if(currentSvg) currentSvg.classList.replace('text-gray-500', 'text-sky-600');
+        }
     </script>
 
     <script src="js/camera-system.js"></script>
-  </body>
+</body>
 </html>

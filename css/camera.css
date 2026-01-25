@@ -5,12 +5,15 @@
 body {
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
+  margin: 0; /* Đảm bảo không có khoảng trắng thừa */
 }
+
 .camera-feed {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   position: relative;
   overflow: hidden;
 }
+
 .camera-feed::before {
   content: "";
   position: absolute;
@@ -26,69 +29,248 @@ body {
     rgba(255, 255, 255, 0.03) 4px
   );
   pointer-events: none;
+  z-index: 5; /* Đảm bảo hiệu ứng scanline nằm trên video */
 }
+
 .recording-dot {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
 @keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
+
 .menu-btn {
   transition: all 0.2s ease;
 }
+
 .menu-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
 .camera-card {
   transition: all 0.2s ease;
 }
+
 .camera-card:hover {
   transform: scale(1.02);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
+
 .camera-alert {
   border: 2px solid #ef4444 !important;
   animation: alertPulse 2s ease-in-out infinite;
 }
+
 @keyframes alertPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
 }
+
 .alert-overlay {
   background: rgba(239, 68, 68, 0.15);
   backdrop-filter: blur(1px);
+  z-index: 10;
 }
+
 .alert-badge {
   animation: alertBlink 1s ease-in-out infinite;
 }
+
 @keyframes alertBlink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
+
 .sidebar-item {
   transition: all 0.15s ease;
 }
+
 .sidebar-item:hover {
   background: #f1f5f9;
 }
+
 .sidebar-item.active {
   background: #e0f2fe;
   border-left: 3px solid #0284c7;
+}
+
+/* ===== Demo video layer ===== */
+.camera-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.05) saturate(1.05);
+  display: block;
+}
+
+/* ===== Camera Zoom Modal ===== */
+.cam-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 9999;
+}
+
+.cam-modal.active {
+  display: flex;
+}
+
+.cam-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75); /* Tăng độ tối để tập trung vào video */
+  backdrop-filter: blur(4px);
+  z-index: -1; /* Luôn nằm dưới panel */
+}
+
+.cam-modal__panel {
+  position: relative;
+  width: min(1100px, calc(100% - 24px));
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+}
+
+.cam-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cam-modal__title {
+  font-weight: 600;
+  color: #111827;
+  font-size: 15px; /* Tăng nhẹ kích thước tiêu đề */
+}
+
+.cam-modal__meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.cam-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: #374151;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.cam-modal__close:hover {
+  background: #f3f4f6;
+  color: #ef4444; /* Chuyển màu đỏ khi hover để gợi ý nút đóng */
+}
+
+.cam-modal__videoWrap {
+  position: relative;
+  background: #000;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+
+.cam-modal__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Đổi thành contain để không bị mất góc video khi zoom */
+  display: block;
+}
+
+.cam-modal__offline {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column; /* Xếp icon và text theo cột */
+  align-items: center;
+  justify-content: center;
+  background: #111827;
+  z-index: 30;
+  padding: 24px;
+}
+
+.cam-modal__time {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  z-index: 25;
+}
+
+.cam-modal__status {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #4ade80;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.cam-modal__status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 1.5s infinite;
+}
+
+.cam-modal__status.is-alert {
+  background: #dc2626;
+  color: #fff;
+}
+
+.cam-modal__status.is-alert::before {
+  background: #fff;
+}
+
+.cam-modal__status.is-offline {
+  background: #4b5563;
+  color: #f3f4f6;
+}
+
+.cam-modal__status.is-offline::before {
+  background: #9ca3af;
+  animation: none;
+}
+
+body.modal-open {
+  overflow: hidden;
+  padding-right: 0px; /* Tránh giật màn hình khi ẩn scrollbar */
+}
+
+/* Ẩn video khi có class hidden */
+.hidden {
+  display: none !important;
 }
