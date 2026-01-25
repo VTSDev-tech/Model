@@ -5,9 +5,10 @@
 body {
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
-  margin: 0; /* Đảm bảo không có khoảng trắng thừa */
+  margin: 0;
 }
 
+/* ===== GIỮ NGUYÊN CÁC CLASS CŨ CỦA BẠN ===== */
 .camera-feed {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   position: relative;
@@ -29,7 +30,7 @@ body {
     rgba(255, 255, 255, 0.03) 4px
   );
   pointer-events: none;
-  z-index: 5; /* Đảm bảo hiệu ứng scanline nằm trên video */
+  z-index: 5;
 }
 
 .recording-dot {
@@ -97,7 +98,6 @@ body {
   border-left: 3px solid #0284c7;
 }
 
-/* ===== Demo video layer ===== */
 .camera-video {
   position: absolute;
   inset: 0;
@@ -108,7 +108,7 @@ body {
   display: block;
 }
 
-/* ===== Camera Zoom Modal ===== */
+/* ===== CAMERA ZOOM MODAL (GIỮ NGUYÊN PHẦN CŨ) ===== */
 .cam-modal {
   position: fixed;
   inset: 0;
@@ -126,9 +126,9 @@ body {
 .cam-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75); /* Tăng độ tối để tập trung vào video */
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(4px);
-  z-index: -1; /* Luôn nằm dưới panel */
+  z-index: -1;
 }
 
 .cam-modal__panel {
@@ -154,7 +154,7 @@ body {
 .cam-modal__title {
   font-weight: 600;
   color: #111827;
-  font-size: 15px; /* Tăng nhẹ kích thước tiêu đề */
+  font-size: 15px;
 }
 
 .cam-modal__meta {
@@ -179,7 +179,7 @@ body {
 
 .cam-modal__close:hover {
   background: #f3f4f6;
-  color: #ef4444; /* Chuyển màu đỏ khi hover để gợi ý nút đóng */
+  color: #ef4444;
 }
 
 .cam-modal__videoWrap {
@@ -192,7 +192,7 @@ body {
 .cam-modal__video {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Đổi thành contain để không bị mất góc video khi zoom */
+  object-fit: contain;
   display: block;
 }
 
@@ -200,7 +200,7 @@ body {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column; /* Xếp icon và text theo cột */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #111827;
@@ -267,10 +267,438 @@ body {
 
 body.modal-open {
   overflow: hidden;
-  padding-right: 0px; /* Tránh giật màn hình khi ẩn scrollbar */
+  padding-right: 0px;
 }
 
-/* Ẩn video khi có class hidden */
 .hidden {
   display: none !important;
+}
+
+/* ============================================================
+   BỔ SUNG CÁC PHẦN MỚI TỪ FILE CSS MỚI NHẤT (KHÔNG THAY ĐỔI CŨ)
+   ============================================================ */
+
+/* App UI additions (tables, buttons, chips, etc.) */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.page-subtitle {
+  margin-top: 4px;
+  color: #6b7280;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .55rem .9rem;
+  border-radius: .75rem;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  transition: all .15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn-primary {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #0369a1;
+  border-color: #0369a1;
+}
+
+.btn-danger {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #374151;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: .75rem;
+  padding: .6rem .75rem;
+  background: #fff;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,165,233,.25);
+  border-color: #0ea5e9;
+}
+
+.select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: .75rem;
+  padding: .6rem .75rem;
+  background: #fff;
+}
+
+.select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,165,233,.25);
+  border-color: #0ea5e9;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .25rem .6rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chip-live { background: rgba(34,197,94,.10); color: #16a34a; }
+.chip-offline { background: rgba(107,114,128,.12); color: #374151; }
+.chip-alert { background: rgba(239,68,68,.10); color: #dc2626; }
+.chip-motion { background: rgba(59,130,246,.10); color: #2563eb; }
+.chip-cont { background: rgba(2,132,199,.10); color: #0369a1; }
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.table th {
+  text-align: left;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 700;
+  letter-spacing: .02em;
+  padding: 12px 14px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #111827;
+  font-size: 14px;
+}
+
+.table tr:hover td {
+  background: #f9fafb;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.kpi-card {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.kpi-title { color: #6b7280; font-size: 12px; font-weight: 700; }
+.kpi-value { color: #111827; font-size: 20px; font-weight: 800; margin-top: 6px; }
+.kpi-sub { color: #9ca3af; font-size: 12px; margin-top: 2px; }
+
+.mini-bar {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.mini-bar > div {
+  height: 8px;
+  border-radius: 999px;
+  background: #0284c7;
+  width: 50%;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  width: 100%;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.badge-green { background: #22c55e; }
+.badge-red { background: #ef4444; }
+.badge-gray { background: #9ca3af; }
+
+.toast {
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+  padding: 12px 14px;
+  max-width: 340px;
+}
+
+.toast-title { font-weight: 800; color: #111827; font-size: 13px; }
+.toast-msg { margin-top: 2px; color: #4b5563; font-size: 13px; }
+
+.toast.success { border-color: rgba(34,197,94,.35); }
+.toast.danger { border-color: rgba(239,68,68,.35); }
+.toast.info { border-color: rgba(2,132,199,.35); }
+
+/* Improve camera grid performance */
+.camera-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Accessibility focus */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,165,233,.25);
+  border-radius: 12px;
+}
+
+/* ====== Modal (camera zoom / playback) - Cập nhật từ file mới ====== */
+.cam-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  font-family: "Inter", sans-serif;
+}
+
+.cam-modal.active {
+  display: block;
+}
+
+.cam-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17,24,39,.75);
+  backdrop-filter: blur(2px);
+}
+
+.cam-modal__panel {
+  position: relative;
+  max-width: 980px;
+  width: calc(100% - 32px);
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+.cam-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.cam-modal__titleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cam-modal__title {
+  font-weight: 800;
+  color: #111827;
+  font-size: 14px;
+}
+
+.cam-modal__meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.cam-modal__close {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px;
+  transition: all .15s ease;
+}
+
+.cam-modal__close:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+}
+
+.cam-modal__videoWrap {
+  position: relative;
+  background: #000;
+  aspect-ratio: 16/9;
+}
+
+.cam-modal__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cam-modal__offline {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.75);
+  z-index: 20;
+}
+
+.cam-modal__time {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 30;
+  background: rgba(0,0,0,.55);
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.cam-modal__status {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 30;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .03em;
+  background: rgba(255,255,255,.12);
+  color: #fff;
+}
+
+.cam-modal__status.is-live {
+  background: rgba(34,197,94,.2);
+  color: #bbf7d0;
+  border: 1px solid rgba(34,197,94,.25);
+}
+
+.cam-modal__status.is-alert {
+  background: rgba(239,68,68,.18);
+  color: #fecaca;
+  border: 1px solid rgba(239,68,68,.25);
+}
+
+.cam-modal__status.is-offline {
+  background: rgba(107,114,128,.18);
+  color: #e5e7eb;
+  border: 1px solid rgba(107,114,128,.25);
+}
+
+@media (max-width: 640px) {
+  .cam-modal__panel {
+    margin: 18px auto;
+  }
+}
+
+/* ============================================================
+   BỔ SUNG THÊM (CHOÁY HƠN - KHÔNG THAY ĐỔI CODE CŨ)
+   ============================================================ */
+
+/* Hiệu ứng mờ kính (Glassmorphism) cho Sidebar Active */
+.sidebar-item.active {
+  background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #0369a1;
+  font-weight: 600;
+  box-shadow: inset 0 0 10px rgba(2, 132, 199, 0.05);
+}
+
+/* Thêm hiệu ứng Vignette cho Video để trông giống rạp phim */
+.camera-feed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* Nâng cấp hiệu ứng hover cho Card */
+.camera-card:hover .camera-video {
+  filter: contrast(1.1) saturate(1.2) brightness(1.1);
+  transition: filter 0.3s ease;
+}
+
+/* Hiệu ứng chuyển cảnh mượt cho Modal */
+.cam-modal {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.cam-modal.active {
+  opacity: 1;
+}
+
+/* Badge trạng thái LIVE/REC tinh tế hơn */
+.recording-dot {
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* Tối ưu hóa phông chữ font mono cho thời gian */
+#current-time, .cam-modal__time {
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
