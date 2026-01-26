@@ -1,4 +1,3 @@
-
 function transitionToPage(event, url) {
     event.preventDefault(); // Chặn chuyển trang ngay lập tức
     const overlay = document.getElementById('page-transition-overlay');
@@ -22,25 +21,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mapImage) {
         if (mapImage.complete) {
-
             mapComp.classList.add('loaded');
         } else {
- 
             mapImage.onload = () => {
                 mapComp.classList.add('loaded');
             };
         }
     }
 
-
     markers.forEach(marker => {
         marker.addEventListener('click', function(e) {
+            const label = this.querySelector('.glass-label')?.textContent;
+
+            // Kiểm tra nếu là nút PARKING MANAGEMENT thì thực hiện chuyển hướng
+            if (label === 'PARKING MANAGEMENT') {
+                const targetUrl = 'https://hoanghaiduong.github.io/weihu-parking-admin/#/dashboard';
+                
+                // Hiệu ứng bấm nút trước khi chuyển trang
+                this.style.transform = 'translate(-60px, 0px) scale(0.9)';
+                
+                // Gọi hàm transition có sẵn của bạn để chuyển trang mượt mà
+                setTimeout(() => {
+                    transitionToPage(e, targetUrl);
+                }, 150);
+                
+                return; // Thoát hàm để không chạy logic mặc định bên dưới
+            }
 
             if (!this.querySelector('a')) {
-                const label = this.querySelector('.glass-label')?.textContent;
                 console.log(`Bạn đã nhấn vào: ${label}`);
                 
- 
                 this.style.transform = 'translate(-60px, 0px) scale(0.9)';
                 setTimeout(() => {
                     this.style.transform = '';
@@ -48,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
     const overlay = document.getElementById('page-transition-overlay');
     if (overlay) {
         overlay.style.opacity = '0';
