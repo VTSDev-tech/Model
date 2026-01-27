@@ -1,5 +1,5 @@
 function transitionToPage(event, url) {
-    event.preventDefault(); // Chặn chuyển trang ngay lập tức
+    if (event) event.preventDefault(); // Đảm bảo chặn mọi hành động mặc định
     const overlay = document.getElementById('page-transition-overlay');
     
     if (overlay) {
@@ -31,23 +31,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markers.forEach(marker => {
         marker.addEventListener('click', function(e) {
-            // Thêm .trim() để đảm bảo so sánh chính xác tuyệt đối ngay cả khi HTML có khoảng trắng thừa
             const label = this.querySelector('.glass-label')?.textContent?.trim();
 
-            // Kiểm tra nếu là nút PARKING MANAGEMENT thì thực hiện chuyển hướng
+            // Ưu tiên xử lý Parking Management bằng logic chặn sự kiện mạnh mẽ
             if (label === 'PARKING MANAGEMENT') {
-                // Chặn sự kiện lan tỏa để không dính link cũ trong thẻ <a>
                 e.preventDefault();
-                e.stopPropagation();
+                e.stopPropagation(); // Ngăn chặn tuyệt đối việc nhảy vào thẻ a gốc
 
                 const targetUrl = 'https://vtsdev-tech.github.io/parking/#/dashboard';
                 
-                // Hiệu ứng bấm nút trước khi chuyển trang
                 this.style.transform = 'translate(-60px, 0px) scale(0.9)';
                 
-                // Gọi hàm transition có sẵn của bạn để chuyển trang mượt mà
                 setTimeout(() => {
                     transitionToPage(e, targetUrl);
+                    // Reset lại vị trí cũ sau khi nhấn
+                    this.style.transform = 'translate(-60px, 0px)';
                 }, 150);
                 
                 return false; 
@@ -58,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 this.style.transform = 'translate(-60px, 0px) scale(0.9)';
                 setTimeout(() => {
-                    // Trả về transform mặc định của class .marker.at-action để tránh bị lệch
                     this.style.transform = 'translate(-60px, 0px)';
                 }, 150);
             }
@@ -67,10 +64,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const overlay = document.getElementById('page-transition-overlay');
     if (overlay) {
-        // Đảm bảo overlay biến mất khi quay lại trang (xử lý lỗi Back button)
+        // Luôn ép overlay ẩn đi khi trang được tải/tải lại
         overlay.style.opacity = '0';
         overlay.style.pointerEvents = 'none';
     }
+
+    // === PHẦN FIX MỚI: Buộc reload khi load từ cache (back/forward button) ===
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {  // Trang được load lại từ cache (khi nhấn back/forward)
+            console.log('Trang load từ cache (back button) → reload để tránh redirect cũ');
+            
+            // Kiểm tra nếu đang ở trang parking (hoặc hash liên quan)
+            if (window.location.href.includes('vtsdev-tech.github.io/parking') || 
+                window.location.hash.includes('/dashboard') || 
+                window.location.hash.includes('/login')) {
+                
+                // Buộc reload trang fresh, bỏ qua cache redirect
+                window.location.reload();
+            }
+        }
+    });
+    // === Kết thúc phần fix ===
 });
 
 window.addEventListener('error', (e) => {
