@@ -1,4 +1,8 @@
 <div class="solution-advanced-map-comp">
+    <div id="map-logo-brand" style="position: fixed; top: 50px; left: 50px; z-index: 1000; display: flex; align-items: center; pointer-events: none;">
+        <img src="img/Thugrouplogo.png" alt="Logo" style="height: 65px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+    </div>
+
     <div id="page-transition-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out; z-index: 9999;"></div>
 
     <link rel="preload" as="image" href="img/image.jpg">
@@ -38,23 +42,19 @@
 
     <script>
         function transitionToPage(event, url) {
-            event.preventDefault(); // Chặn chuyển trang ngay lập tức
+            event.preventDefault(); 
             const overlay = document.getElementById('page-transition-overlay');
-            
-            // Kích hoạt lớp phủ trắng mờ dần lên
             overlay.style.opacity = '1';
             overlay.style.pointerEvents = 'auto';
-            
-            // Đợi hiệu ứng hoàn tất (500ms) rồi mới chuyển link
             setTimeout(() => {
                 window.location.href = url;
-            }, 500);
+            }, 500);    
         }
     </script>
 
     <div class="solution-advanced-map-title">
-        <p class="sub-title">Adarder-title hl</p>
-        <h2 class="main-title">THU GROUP SYSTEM</h2>
+        <h2 class="main-title">THU-ISES</h2>
+        <p class="sub-title">Smart System Integrityl</p>
     </div>
     
     <head>
@@ -70,14 +70,15 @@
                      onload="this.closest('.solution-advanced-map-comp').classList.add('loaded')">
             </div>
 
-            <li class="marker at-action" data-at-module="solution_advanced_map::Smart Warehouse" style="left: 66.8%; top: 15.5%;">
-        <a href="https://hoanghaiduong.github.io/weihu-parking-admin/#/dashboard" target="_blank" style="text-decoration: none; color: inherit; display: block;">
-        <span class="text">1</span>
-        <div class="topic">
-            <div class="glass-label">PARKING MANAGEMENT</div>
-        </div>
-             </a>
-            </li>
+            <ul class="marker-box">
+                <li class="marker at-action" data-at-module="solution_advanced_map::Smart Warehouse" style="left: 66.8%; top: 15.5%;">
+                    <a href="https://hoanghaiduong.github.io/weihu-parking-admin/#/dashboard" target="_blank" style="text-decoration: none; color: inherit; display: block;">
+                        <span class="text">1</span>
+                        <div class="topic">
+                            <div class="glass-label">PARKING MANAGEMENT</div>
+                        </div>
+                    </a>
+                </li>
 
                 <li class="marker at-action" data-at-module="solution_advanced_map::Central Office" style="left: 32.2%; top: 36.5%;">
                     <a href="camera system.html" onclick="transitionToPage(event, 'camera system.html')">

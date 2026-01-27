@@ -44,25 +44,23 @@
     margin: 0;
 }
 
-/* ==========================================================================
-   2. KHU VỰC BẢN ĐỒ (XÓA BORDER VÀ SHADOW TẠI ĐÂY)
-   ========================================================================== */
+
 .map-wrapper {
     position: relative;
     width: 100%;
     max-width: 1200px;
-    background: transparent; /* SỬA: Để nền trong suốt */
-    border-radius: 0;         /* SỬA: Xóa bo góc ngoài */
-    box-shadow: none;          /* QUAN TRỌNG: Xóa bóng đổ bao quanh */
-    padding: 0;               /* SỬA: Xóa padding thừa để ảnh sát lề */
+    background: transparent;
+    border-radius: 0;         
+    box-shadow: none;          
+    padding: 0;              
     transition: transform 0.3s ease;
 }
 
 .map-container {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 9;      /* Giữ tỉ lệ chuẩn để marker không lệch */
-    overflow: visible;         /* SỬA: Để nhãn có thể hiển thị tràn ra ngoài */
+    aspect-ratio: 16 / 9;      
+    overflow: visible;        
 }
 
 .img-box {

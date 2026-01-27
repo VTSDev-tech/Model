@@ -1,6 +1,8 @@
+
 import { safeJsonParse, uuid } from "./utils.js";
 
 const LS = {
+  version: "wc_version",
   settings: "wc_settings",
   cameras: "wc_cameras",
   recordings: "wc_recordings",
@@ -8,6 +10,9 @@ const LS = {
   users: "wc_users",
   devices: "wc_devices",
 };
+
+// Bump this when changing demo schema/data so users don't get stuck with old localStorage.
+const DEMO_VERSION = 2;
 
 const listeners = new Set();
 
@@ -17,9 +22,7 @@ export function subscribe(fn) {
 }
 function notify() {
   listeners.forEach((fn) => {
-    try {
-      fn(getState());
-    } catch {}
+    try { fn(getState()); } catch {}
   });
 }
 
@@ -46,7 +49,7 @@ export function resetDemoData() {
 // NOTE: We use Google sample videos here because some networks block upload.wikimedia.org.
 // These are stable, CORS-friendly, and play well on Chrome/Edge.
 const DEMO_TRAFFIC_VIDEOS = [
-  "https://upload.wikimedia.org/wikipedia/commons/transcoded/7/70/Street_traffic.webm/Street_traffic.webm.360p.webm",
+"https://upload.wikimedia.org/wikipedia/commons/transcoded/7/70/Street_traffic.webm/Street_traffic.webm.360p.webm",
   "https://upload.wikimedia.org/wikipedia/commons/transcoded/6/68/Avtocesta.webm/Avtocesta.webm.360p.webm",
   "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/fa/Cars_Passing_by_at_Night.webm/Cars_Passing_by_at_Night.webm.360p.webm",
   "https://upload.wikimedia.org/wikipedia/commons/transcoded/7/78/Alaskan_Way_Viaduct_timelapse.webm/Alaskan_Way_Viaduct_timelapse.webm.480p.vp9.webm",
@@ -57,7 +60,7 @@ export function trafficVideoForIndex(i) {
 }
 
 export const defaultConfig = {
-  system_title: "Hệ Thống Quản Lý Camera",
+  system_title: "THUVISION",
   warehouse_name: "Camera Nhà Kho",
   subtitle: "Giám sát an ninh tập trung",
   storage_total_bytes: 8 * 1024 ** 4, // 8 TB
@@ -82,20 +85,16 @@ function seedCameras() {
     list.push({
       id: `CAM-${String(i).padStart(3, "0")}`,
       name:
-        i === 1
-          ? "Cổng chính"
-          : i === 6
-            ? "Khu C1"
-            : i === 10
-              ? "Bãi xe"
-              : `Camera ${z.short}-${i}`,
+        i === 1 ? "Cổng chính" :
+        i === 6 ? "Khu C1" :
+        i === 10 ? "Bãi xe" : `Camera ${z.short}-${i}`,
       location: z.zone,
       zone: z.zone,
-      status: i === 5 || i === 8 ? "offline" : i === 6 ? "alert" : "online",
+      status: (i === 5 || i === 8) ? "offline" : (i === 6 ? "alert" : "online"),
       alertType: i === 6 ? "Phát hiện người lạ" : "",
       demoSrc: trafficVideoForIndex(i),
       rtsp: `rtsp://demo.local/cam${i}`,
-      lastSeen: Date.now() - i * 60_000,
+      lastSeen: Date.now() - (i * 60_000),
     });
   }
   return list;
@@ -103,41 +102,11 @@ function seedCameras() {
 
 function seedUsers() {
   return [
-    {
-      id: uuid("user"),
-      name: "Admin",
-      email: "admin@warehouse.vn",
-      role: "Admin",
-      status: "active",
-    },
-    {
-      id: uuid("user"),
-      name: "Supervisor 1",
-      email: "spv1@warehouse.vn",
-      role: "Supervisor",
-      status: "active",
-    },
-    {
-      id: uuid("user"),
-      name: "Operator 1",
-      email: "op1@warehouse.vn",
-      role: "Operator",
-      status: "active",
-    },
-    {
-      id: uuid("user"),
-      name: "Viewer 1",
-      email: "view1@warehouse.vn",
-      role: "Viewer",
-      status: "active",
-    },
-    {
-      id: uuid("user"),
-      name: "Guest",
-      email: "guest@warehouse.vn",
-      role: "Viewer",
-      status: "locked",
-    },
+    { id: uuid("user"), name: "Admin", email: "admin@warehouse.vn", role: "Admin", status: "active" },
+    { id: uuid("user"), name: "Supervisor 1", email: "spv1@warehouse.vn", role: "Supervisor", status: "active" },
+    { id: uuid("user"), name: "Operator 1", email: "op1@warehouse.vn", role: "Operator", status: "active" },
+    { id: uuid("user"), name: "Viewer 1", email: "view1@warehouse.vn", role: "Viewer", status: "active" },
+    { id: uuid("user"), name: "Guest", email: "guest@warehouse.vn", role: "Viewer", status: "locked" },
   ];
 }
 
@@ -152,7 +121,7 @@ function seedDevices(cameras) {
     model: "IPC-2MP",
     firmware: `v1.${idx % 5}.${idx % 9}`,
     status: c.status,
-    lastCheck: Date.now() - idx * 120_000,
+    lastCheck: Date.now() - (idx * 120_000),
   }));
 }
 
@@ -173,8 +142,7 @@ function seedRecordings(cameras) {
       const cam = pick(cameras);
       const start = now - d * 86400_000 - randInt(0, 3600_000 * 10);
       const durationSec = pick([15, 30, 45, 60, 90, 120, 180, 300]);
-      const ev =
-        cam.status === "alert" && Math.random() < 0.35 ? "alert" : pick(events);
+      const ev = (cam.status === "alert" && Math.random() < 0.35) ? "alert" : pick(events);
       const sizeBytes = durationSec * randInt(220_000, 520_000); // ~0.2-0.5MB/s
       list.push({
         id: uuid("rec"),
@@ -196,25 +164,27 @@ function seedRecordings(cameras) {
 
 function seedAlerts(cameras) {
   const now = Date.now();
-  const types = [
-    "Xâm nhập khu vực cấm",
-    "Phát hiện người lạ",
-    "Vượt rào",
-    "Mất tín hiệu tạm thời",
-    "Chuyển động bất thường",
+  // Demo alert types for warehouse camera management
+  // (as requested: nhiệt độ, cháy, khói, tia lửa nhỏ)
+  const templates = [
+    { type: "Cảnh báo cháy", severity: "high" },
+    { type: "Cảnh báo có khói", severity: "high" },
+    { type: "Cảnh báo nhiệt độ cao", severity: "medium" },
+    { type: "Phát hiện tia lửa nhỏ", severity: "medium" },
+    { type: "Phát hiện người lạ", severity: "low" },
   ];
-  const sev = ["low", "medium", "high"];
   const list = [];
   for (let i = 0; i < 22; i++) {
     const cam = pick(cameras);
-    const status = i < 8 ? "new" : i < 15 ? "ack" : "resolved";
+    const status = i < 8 ? "new" : (i < 15 ? "ack" : "resolved");
+    const tpl = templates[i % templates.length];
     list.push({
       id: uuid("al"),
       camId: cam.id,
       camName: cam.name,
       zone: cam.zone,
-      type: pick(types),
-      severity: pick(sev),
+      type: tpl.type,
+      severity: tpl.severity,
       status,
       ts: now - randInt(10_000, 86400_000 * 5),
       note: "",
@@ -228,6 +198,9 @@ function seedAlerts(cameras) {
 let state = null;
 
 export function initStore(force = false) {
+  const storedVersion = Number(localStorage.getItem(LS.version) || "0");
+  if (storedVersion !== DEMO_VERSION) force = true;
+
   const settings = load(LS.settings, null);
   const cameras = load(LS.cameras, null);
   const users = load(LS.users, null);
@@ -237,10 +210,8 @@ export function initStore(force = false) {
 
   const seededCameras = cameras && !force ? cameras : seedCameras();
   const seededUsers = users && !force ? users : seedUsers();
-  const seededDevices =
-    devices && !force ? devices : seedDevices(seededCameras);
-  const seededRecordings =
-    recordings && !force ? recordings : seedRecordings(seededCameras);
+  const seededDevices = devices && !force ? devices : seedDevices(seededCameras);
+  const seededRecordings = recordings && !force ? recordings : seedRecordings(seededCameras);
   const seededAlerts = alerts && !force ? alerts : seedAlerts(seededCameras);
   const seededSettings = settings && !force ? settings : defaultConfig;
 
@@ -259,6 +230,7 @@ export function initStore(force = false) {
   save(LS.devices, state.devices);
   save(LS.recordings, state.recordings);
   save(LS.alerts, state.alerts);
+  localStorage.setItem(LS.version, String(DEMO_VERSION));
 
   notify();
 }
@@ -282,9 +254,7 @@ export function setSettings(patch) {
 }
 
 export function updateCamera(camId, patch) {
-  state.cameras = state.cameras.map((c) =>
-    c.id === camId ? { ...c, ...patch } : c,
-  );
+  state.cameras = state.cameras.map((c) => (c.id === camId ? { ...c, ...patch } : c));
   save(LS.cameras, state.cameras);
   notify();
 }
@@ -311,9 +281,7 @@ export function addDevice(dev) {
   notify();
 }
 export function updateDevice(id, patch) {
-  state.devices = state.devices.map((d) =>
-    d.id === id ? { ...d, ...patch } : d,
-  );
+  state.devices = state.devices.map((d) => (d.id === id ? { ...d, ...patch } : d));
   save(LS.devices, state.devices);
   notify();
 }
@@ -324,9 +292,7 @@ export function deleteDevice(id) {
 }
 
 export function updateAlert(id, patch) {
-  state.alerts = state.alerts.map((a) =>
-    a.id === id ? { ...a, ...patch } : a,
-  );
+  state.alerts = state.alerts.map((a) => (a.id === id ? { ...a, ...patch } : a));
   save(LS.alerts, state.alerts);
   notify();
 }
@@ -343,14 +309,6 @@ export function computeCounts() {
   const offline = state.cameras.filter((c) => c.status === "offline").length;
   const alertsOpen = state.alerts.filter((a) => a.status !== "resolved").length;
   const used = state.recordings.reduce((sum, r) => sum + (r.sizeBytes || 0), 0);
-  const total =
-    state.settings.storage_total_bytes || defaultConfig.storage_total_bytes;
-  return {
-    online,
-    alert,
-    offline,
-    alertsOpen,
-    usedBytes: used,
-    totalBytes: total,
-  };
+  const total = state.settings.storage_total_bytes || defaultConfig.storage_total_bytes;
+  return { online, alert, offline, alertsOpen, usedBytes: used, totalBytes: total };
 }
