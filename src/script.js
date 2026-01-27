@@ -1,5 +1,8 @@
 function transitionToPage(event, url) {
-    if (event) event.preventDefault(); // Đảm bảo chặn mọi hành động mặc định
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation(); // Ngăn bubble lên các element cha
+    }
     const overlay = document.getElementById('page-transition-overlay');
     
     if (overlay) {
@@ -23,9 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mapImage.complete) {
             mapComp.classList.add('loaded');
         } else {
-            mapImage.onload = () => {
+            mapImage.addEventListener('load', () => {
                 mapComp.classList.add('loaded');
-            };
+            });
+            mapImage.addEventListener('error', () => {
+                console.warn('Không tải được ảnh bản đồ: img/logomap.png');
+                mapComp.classList.add('loaded'); // Vẫn hiển thị marker dù ảnh lỗi
+            });
         }
     }
 
@@ -33,53 +40,55 @@ document.addEventListener('DOMContentLoaded', () => {
         marker.addEventListener('click', function(e) {
             const label = this.querySelector('.glass-label')?.textContent?.trim();
 
-            // Ưu tiên xử lý Parking Management bằng logic chặn sự kiện mạnh mẽ
+            // Xử lý Parking Management: dùng link repo của bạn
             if (label === 'PARKING MANAGEMENT') {
                 e.preventDefault();
-                e.stopPropagation(); // Ngăn chặn tuyệt đối việc nhảy vào thẻ a gốc
+                e.stopPropagation();
 
-                const targetUrl = 'https://vtsdev-tech.github.io/parking/#/dashboard';
+                // Link đúng repo hoanghaiduong (dashboard thay vì login để vào thẳng nếu auth)
+                const targetUrl = 'https://hoanghaiduong.github.io/weihu-parking-admin/#/dashboard';
                 
-                this.style.transform = 'translate(-60px, 0px) scale(0.9)';
+                // Hiệu ứng nhấn nhẹ
+                this.style.transform = 'translate(-60px, 0px) scale(0.92)';
                 
                 setTimeout(() => {
                     transitionToPage(e, targetUrl);
-                    // Reset lại vị trí cũ sau khi nhấn
+                    // Reset vị trí
                     this.style.transform = 'translate(-60px, 0px)';
-                }, 150);
+                }, 180);
                 
-                return false; 
+                return false;
             }
 
+            // Các marker khác
             if (!this.querySelector('a')) {
                 console.log(`Bạn đã nhấn vào: ${label}`);
                 
-                this.style.transform = 'translate(-60px, 0px) scale(0.9)';
+                this.style.transform = 'translate(-60px, 0px) scale(0.92)';
                 setTimeout(() => {
                     this.style.transform = 'translate(-60px, 0px)';
-                }, 150);
+                }, 180);
             }
         });
     });
 
     const overlay = document.getElementById('page-transition-overlay');
     if (overlay) {
-        // Luôn ép overlay ẩn đi khi trang được tải/tải lại
         overlay.style.opacity = '0';
         overlay.style.pointerEvents = 'none';
     }
 
-    // === PHẦN FIX MỚI: Buộc reload khi load từ cache (back/forward button) ===
+    // === PHẦN FIX: Buộc reload khi load từ cache (back/forward button) ===
     window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {  // Trang được load lại từ cache (khi nhấn back/forward)
+        if (event.persisted) {  // Trang load từ cache (back/forward)
             console.log('Trang load từ cache (back button) → reload để tránh redirect cũ');
             
-            // Kiểm tra nếu đang ở trang parking (hoặc hash liên quan)
-            if (window.location.href.includes('vtsdev-tech.github.io/parking') || 
+            // Kiểm tra nếu đang ở trang parking (dùng link hoanghaiduong)
+            if (window.location.href.includes('hoanghaiduong.github.io/weihu-parking-admin') || 
                 window.location.hash.includes('/dashboard') || 
                 window.location.hash.includes('/login')) {
                 
-                // Buộc reload trang fresh, bỏ qua cache redirect
+                // Buộc reload fresh, bỏ cache redirect
                 window.location.reload();
             }
         }
@@ -89,6 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('error', (e) => {
     if (e.target.tagName === 'IMG') {
-        console.warn('Cảnh báo: Không tìm thấy ảnh tại img/image.jpg');
+        console.warn('Cảnh báo: Không tìm thấy ảnh tại', e.target.src);
     }
 }, true);
