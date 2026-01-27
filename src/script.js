@@ -31,11 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markers.forEach(marker => {
         marker.addEventListener('click', function(e) {
-            const label = this.querySelector('.glass-label')?.textContent;
+            // Thêm .trim() để đảm bảo so sánh chính xác tuyệt đối ngay cả khi HTML có khoảng trắng thừa
+            const label = this.querySelector('.glass-label')?.textContent?.trim();
 
             // Kiểm tra nếu là nút PARKING MANAGEMENT thì thực hiện chuyển hướng
             if (label === 'PARKING MANAGEMENT') {
-                const targetUrl = 'https://hoanghaiduong.github.io/weihu-parking-admin/#/dashboard';
+                // Chặn sự kiện lan tỏa để không dính link cũ trong thẻ <a>
+                e.preventDefault();
+                e.stopPropagation();
+
+                const targetUrl = 'https://vtsdev-tech.github.io/parking/#/dashboard';
                 
                 // Hiệu ứng bấm nút trước khi chuyển trang
                 this.style.transform = 'translate(-60px, 0px) scale(0.9)';
@@ -45,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     transitionToPage(e, targetUrl);
                 }, 150);
                 
-                return; // Thoát hàm để không chạy logic mặc định bên dưới
+                return false; 
             }
 
             if (!this.querySelector('a')) {
@@ -53,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 this.style.transform = 'translate(-60px, 0px) scale(0.9)';
                 setTimeout(() => {
-                    this.style.transform = '';
+                    // Trả về transform mặc định của class .marker.at-action để tránh bị lệch
+                    this.style.transform = 'translate(-60px, 0px)';
                 }, 150);
             }
         });
@@ -61,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const overlay = document.getElementById('page-transition-overlay');
     if (overlay) {
+        // Đảm bảo overlay biến mất khi quay lại trang (xử lý lỗi Back button)
         overlay.style.opacity = '0';
         overlay.style.pointerEvents = 'none';
     }
