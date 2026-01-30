@@ -1,4 +1,3 @@
-
 import { qs, qsa, formatDateTime } from "../utils.js";
 import { getState, computeCounts, trafficVideoForIndex } from "../store.js";
 import { openModal, closeModal, wireModal } from "../components/modal.js";
@@ -41,7 +40,13 @@ function renderGrid() {
           ${isAlert ? '<div class="alert-overlay absolute inset-0 z-10"></div>' : ""}
           ${isOffline ? '<div class="absolute inset-0 bg-gray-900/80 z-10"></div>' : ""}
 
-          ${!isOffline ? `<video class="camera-video" autoplay muted loop playsinline preload="metadata" src="${trafficVideoForIndex(idx)}"></video>` : ""}
+          ${!isOffline ? `
+            <iframe 
+              class="camera-video w-full h-full border-none pointer-events-none" 
+              src="${trafficVideoForIndex(idx)}" 
+              scrolling="no" 
+              allowfullscreen>
+            </iframe>` : ""}
 
           ${isOffline ? `
             <div class="absolute inset-0 flex items-center justify-center z-20">
@@ -98,7 +103,6 @@ function renderGrid() {
     `;
   }).join("");
 
-  // wire click open modal
   qsa(".camera-card", grid).forEach((card) => {
     card.addEventListener("click", () => {
       const idx = Number(card.getAttribute("data-cam-index"));
@@ -129,31 +133,39 @@ function openCameraModal(idx) {
   badge.classList.remove("is-live", "is-alert", "is-offline");
   badge.classList.add(cam.status === "alert" ? "is-alert" : cam.status === "offline" ? "is-offline" : "is-live");
 
-  const video = qs("#modal-video");
+  // SỬA ĐỔI: Xử lý hiển thị iframe trong Modal phóng to
+  const videoElement = qs("#modal-video");
   const offline = qs("#modal-offline");
+  
+  // Tạo hoặc tìm container cho iframe trong modal
+  let container = qs(".modal-video-container");
+  if (!container && videoElement) {
+    container = videoElement.parentElement;
+    container.classList.add("modal-video-container");
+  }
+
   if (cam.status === "offline") {
-    video.pause();
-    video.removeAttribute("src");
-    video.load();
-    video.classList.add("hidden");
+    if (container) container.innerHTML = ""; 
     offline.classList.remove("hidden");
   } else {
     offline.classList.add("hidden");
-    video.classList.remove("hidden");
-    video.src = trafficVideoForIndex(idx);
-    video.play().catch(() => {});
+    if (container) {
+      container.innerHTML = `
+        <iframe 
+          src="${trafficVideoForIndex(idx)}" 
+          class="w-full aspect-video border-none" 
+          scrolling="no" 
+          allowfullscreen>
+        </iframe>`;
+    }
   }
 
   openModal("#camera-modal");
 }
 
 function closeCameraModal() {
-  const video = qs("#modal-video");
-  if (video) {
-    video.pause();
-    video.removeAttribute("src");
-    video.load();
-  }
+  const container = qs(".modal-video-container");
+  if (container) container.innerHTML = ""; // Xóa iframe khi đóng để tiết kiệm tài nguyên
   closeModal("#camera-modal");
 }
 
@@ -162,7 +174,6 @@ function wireModalActions() {
   qs("#cam-modal-close")?.addEventListener("click", closeCameraModal);
 
   qs("#modal-open-recordings")?.addEventListener("click", () => {
-    // Jump to recordings page with payload: camera filter
     const { cameras } = getState();
     const cam = cameras[selectedCamIndex];
     if (!cam) return;
@@ -188,10 +199,10 @@ function renderCounts() {
   qs("#warehouse-alert").textContent = c.alert;
   qs("#warehouse-offline").textContent = c.offline;
 
-  // storage
   const usedGB = (c.usedBytes / 1024 ** 3);
   const totalGB = (c.totalBytes / 1024 ** 3);
-  qs("#warehouse-storage").textContent = `${usedGB.toFixed(1)} GB / ${totalGB.toFixed(0)} GB`;
+  const storageEl = qs("#warehouse-storage");
+  if (storageEl) storageEl.textContent = `${usedGB.toFixed(1)} GB / ${totalGB.toFixed(0)} GB`;
 }
 
 export function initWarehousePage() {

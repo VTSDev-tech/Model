@@ -1,4 +1,3 @@
-
 import { safeJsonParse, uuid } from "./utils.js";
 
 const LS = {
@@ -11,8 +10,8 @@ const LS = {
   devices: "wc_devices",
 };
 
-// Bump this when changing demo schema/data so users don't get stuck with old localStorage.
-const DEMO_VERSION = 2;
+// Nâng lên version 13 để ép trình duyệt cập nhật lại toàn bộ link camera mới
+const DEMO_VERSION = 13; 
 
 const listeners = new Set();
 
@@ -45,25 +44,19 @@ export function resetDemoData() {
   initStore(true);
 }
 
-// Traffic / vehicle demo videos
-// NOTE: We use Google sample videos here because some networks block upload.wikimedia.org.
-// These are stable, CORS-friendly, and play well on Chrome/Edge.
-const DEMO_TRAFFIC_VIDEOS = [
-"https://upload.wikimedia.org/wikipedia/commons/transcoded/7/70/Street_traffic.webm/Street_traffic.webm.360p.webm",
-  "https://upload.wikimedia.org/wikipedia/commons/transcoded/6/68/Avtocesta.webm/Avtocesta.webm.360p.webm",
-  "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/fa/Cars_Passing_by_at_Night.webm/Cars_Passing_by_at_Night.webm.360p.webm",
-  "https://upload.wikimedia.org/wikipedia/commons/transcoded/7/78/Alaskan_Way_Viaduct_timelapse.webm/Alaskan_Way_Viaduct_timelapse.webm.480p.vp9.webm",
-];
-
+/**
+ * ĐÃ SỬA: Hàm này cực kỳ quan trọng để file warehouse.js lấy được link video
+ */
 export function trafficVideoForIndex(i) {
-  return DEMO_TRAFFIC_VIDEOS[i % DEMO_TRAFFIC_VIDEOS.length];
+  if (!state || !state.cameras || !state.cameras[i]) return "";
+  return state.cameras[i].demoSrc;
 }
 
 export const defaultConfig = {
   system_title: "THUVISION",
   warehouse_name: "Camera Nhà Kho",
   subtitle: "Giám sát an ninh tập trung",
-  storage_total_bytes: 8 * 1024 ** 4, // 8 TB
+  storage_total_bytes: 8 * 1024 ** 4,
   accent_color: "#0284c7",
   alert_sound: true,
   auto_refresh_sec: 5,
@@ -82,18 +75,21 @@ function seedCameras() {
   const list = [];
   for (let i = 1; i <= 12; i++) {
     const z = zones[(i - 1) % zones.length];
+    
+    // Sử dụng link stream.html để nhúng vào Iframe (Fix màn hình đen)
+    const currentSrc = (i === 1) 
+      ? "http://127.0.0.1:1984/stream.html?src=cam_nhakho&mode=webrtc" 
+      : "";
+
     list.push({
       id: `CAM-${String(i).padStart(3, "0")}`,
-      name:
-        i === 1 ? "Cổng chính" :
-        i === 6 ? "Khu C1" :
-        i === 10 ? "Bãi xe" : `Camera ${z.short}-${i}`,
+      name: i === 1 ? "Cổng chính (LIVE)" : `Camera ${z.short}-${i}`,
       location: z.zone,
       zone: z.zone,
-      status: (i === 5 || i === 8) ? "offline" : (i === 6 ? "alert" : "online"),
-      alertType: i === 6 ? "Phát hiện người lạ" : "",
-      demoSrc: trafficVideoForIndex(i),
-      rtsp: `rtsp://demo.local/cam${i}`,
+      status: i === 1 ? "online" : "offline",
+      alertType: "",
+      demoSrc: currentSrc, 
+      rtsp: i === 1 ? `rtsp://admin:12345@192.168.1.64:554/Streaming/Channels/101` : "",
       lastSeen: Date.now() - (i * 60_000),
     });
   }
@@ -116,7 +112,7 @@ function seedDevices(cameras) {
     camId: c.id,
     name: c.name,
     zone: c.zone,
-    ip: `192.168.1.${20 + idx}`,
+    ip: idx === 0 ? "192.168.1.64" : `0.0.0.0`,
     rtsp: c.rtsp,
     model: "IPC-2MP",
     firmware: `v1.${idx % 5}.${idx % 9}`,
@@ -125,75 +121,8 @@ function seedDevices(cameras) {
   }));
 }
 
-function randInt(min, max) {
-  return Math.floor(min + Math.random() * (max - min + 1));
-}
-function pick(arr) {
-  return arr[randInt(0, arr.length - 1)];
-}
-
-function seedRecordings(cameras) {
-  // Create demo recordings for last 7 days
-  const now = Date.now();
-  const events = ["continuous", "motion", "alert"];
-  const list = [];
-  for (let d = 0; d < 7; d++) {
-    for (let i = 0; i < 18; i++) {
-      const cam = pick(cameras);
-      const start = now - d * 86400_000 - randInt(0, 3600_000 * 10);
-      const durationSec = pick([15, 30, 45, 60, 90, 120, 180, 300]);
-      const ev = (cam.status === "alert" && Math.random() < 0.35) ? "alert" : pick(events);
-      const sizeBytes = durationSec * randInt(220_000, 520_000); // ~0.2-0.5MB/s
-      list.push({
-        id: uuid("rec"),
-        camId: cam.id,
-        camName: cam.name,
-        zone: cam.zone,
-        eventType: ev,
-        startTs: start,
-        durationSec,
-        sizeBytes,
-        demoSrc: cam.demoSrc,
-      });
-    }
-  }
-  // newest first
-  list.sort((a, b) => b.startTs - a.startTs);
-  return list;
-}
-
-function seedAlerts(cameras) {
-  const now = Date.now();
-  // Demo alert types for warehouse camera management
-  // (as requested: nhiệt độ, cháy, khói, tia lửa nhỏ)
-  const templates = [
-    { type: "Cảnh báo cháy", severity: "high" },
-    { type: "Cảnh báo có khói", severity: "high" },
-    { type: "Cảnh báo nhiệt độ cao", severity: "medium" },
-    { type: "Phát hiện tia lửa nhỏ", severity: "medium" },
-    { type: "Phát hiện người lạ", severity: "low" },
-  ];
-  const list = [];
-  for (let i = 0; i < 22; i++) {
-    const cam = pick(cameras);
-    const status = i < 8 ? "new" : (i < 15 ? "ack" : "resolved");
-    const tpl = templates[i % templates.length];
-    list.push({
-      id: uuid("al"),
-      camId: cam.id,
-      camName: cam.name,
-      zone: cam.zone,
-      type: tpl.type,
-      severity: tpl.severity,
-      status,
-      ts: now - randInt(10_000, 86400_000 * 5),
-      note: "",
-      demoSrc: cam.demoSrc,
-    });
-  }
-  list.sort((a, b) => b.ts - a.ts);
-  return list;
-}
+function seedRecordings(cameras) { return []; }
+function seedAlerts(cameras) { return []; }
 
 let state = null;
 
@@ -235,16 +164,11 @@ export function initStore(force = false) {
   notify();
 }
 
-export function getState() {
-  return state;
-}
+export function getState() { return state; }
 
-// Derive a demo traffic video from a camera id.
-// This intentionally ignores any persisted demoSrc in localStorage so the app
-// keeps working even if a previous demo source becomes unreachable.
 export function trafficVideoForCamId(camId) {
-  const idx = (state?.cameras || []).findIndex((c) => c.id === camId);
-  return trafficVideoForIndex(idx >= 0 ? idx : 0);
+  const cam = (state?.cameras || []).find((c) => c.id === camId);
+  return cam ? cam.demoSrc : "";
 }
 
 export function setSettings(patch) {
