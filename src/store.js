@@ -10,8 +10,7 @@ const LS = {
   devices: "wc_devices",
 };
 
-// Nâng lên version 13 để ép trình duyệt cập nhật lại toàn bộ link camera mới
-const DEMO_VERSION = 13; 
+const DEMO_VERSION = 26; 
 
 const listeners = new Set();
 
@@ -44,9 +43,6 @@ export function resetDemoData() {
   initStore(true);
 }
 
-/**
- * ĐÃ SỬA: Hàm này cực kỳ quan trọng để file warehouse.js lấy được link video
- */
 export function trafficVideoForIndex(i) {
   if (!state || !state.cameras || !state.cameras[i]) return "";
   return state.cameras[i].demoSrc;
@@ -76,20 +72,27 @@ function seedCameras() {
   for (let i = 1; i <= 12; i++) {
     const z = zones[(i - 1) % zones.length];
     
-    // Sử dụng link stream.html để nhúng vào Iframe (Fix màn hình đen)
-    const currentSrc = (i === 1) 
-      ? "http://127.0.0.1:1984/stream.html?src=cam_nhakho&mode=webrtc" 
-      : "";
+    let currentSrc = "";
+    let currentRtsp = "";
+    let currentStatus = "online";
+
+    if (i === 1) {
+      currentSrc = "http://127.0.0.1:1984/stream.html?src=cam01&mode=webrtc";
+      currentRtsp = "rtsp://admin:Doanhhackduoc3m@192.168.1.11:554/Streaming/Channels/101";
+    } else if (i === 2) {
+      currentSrc = "http://127.0.0.1:1984/stream.html?src=cam02&mode=webrtc";
+      currentRtsp = "rtsp://admin:12345@192.168.1.64:554/Streaming/Channels/101";
+    }
 
     list.push({
       id: `CAM-${String(i).padStart(3, "0")}`,
-      name: i === 1 ? "Cổng chính (LIVE)" : `Camera ${z.short}-${i}`,
+      name: i === 1 ? "Cổng chính (LIVE)" : i === 2 ? "Kho hàng A (LIVE)" : `Camera ${z.short}-${i}`,
       location: z.zone,
       zone: z.zone,
-      status: i === 1 ? "online" : "offline",
+      status: currentStatus,
       alertType: "",
       demoSrc: currentSrc, 
-      rtsp: i === 1 ? `rtsp://admin:12345@192.168.1.64:554/Streaming/Channels/101` : "",
+      rtsp: currentRtsp,
       lastSeen: Date.now() - (i * 60_000),
     });
   }
@@ -112,7 +115,7 @@ function seedDevices(cameras) {
     camId: c.id,
     name: c.name,
     zone: c.zone,
-    ip: idx === 0 ? "192.168.1.64" : `0.0.0.0`,
+    ip: idx === 0 ? "192.168.1.11" : idx === 1 ? "192.168.1.64" : "0.0.0.0",
     rtsp: c.rtsp,
     model: "IPC-2MP",
     firmware: `v1.${idx % 5}.${idx % 9}`,
@@ -161,28 +164,57 @@ export function initStore(force = false) {
   save(LS.alerts, state.alerts);
   localStorage.setItem(LS.version, String(DEMO_VERSION));
 
+  syncWithAIServer();
   notify();
 }
 
-export function getState() { return state; }
+async function syncWithAIServer() {
+  setInterval(async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/get_status');
+      const data = await response.json();
 
+      let hasChange = false;
+
+      Object.keys(data.cameras).forEach(camId => {
+        const currentCam = state.cameras.find(c => c.id === camId);
+        
+        // ĐẢM BẢO CHỖ NÀY: AI trả về person hoặc bất cứ thứ gì khác online -> alerting
+        const newStatus = data.cameras[camId] !== 'online' ? 'alerting' : 'online';
+        
+        if (currentCam && currentCam.status !== newStatus) {
+          // Cập nhật trực tiếp vào state trước khi notify
+          currentCam.status = newStatus; 
+          hasChange = true;
+        }
+      });
+
+      // ... (Phần xử lý history giữ nguyên) ...
+
+      if (hasChange) {
+        save(LS.cameras, state.cameras); // Lưu tất cả thay đổi một lần
+        notify(); // Bắn tín hiệu để Warehouse.js vẽ lại viền đỏ
+      }
+    } catch (err) { }
+  }, 1500);
+}
+
+// Các hàm Export giữ nguyên như code gốc
+export function getState() { return state; }
 export function trafficVideoForCamId(camId) {
   const cam = (state?.cameras || []).find((c) => c.id === camId);
   return cam ? cam.demoSrc : "";
 }
-
 export function setSettings(patch) {
   state.settings = { ...state.settings, ...patch };
   save(LS.settings, state.settings);
   notify();
 }
-
 export function updateCamera(camId, patch) {
   state.cameras = state.cameras.map((c) => (c.id === camId ? { ...c, ...patch } : c));
   save(LS.cameras, state.cameras);
   notify();
 }
-
 export function addUser(user) {
   state.users = [{ ...user, id: uuid("user") }, ...state.users];
   save(LS.users, state.users);
@@ -198,7 +230,6 @@ export function deleteUser(id) {
   save(LS.users, state.users);
   notify();
 }
-
 export function addDevice(dev) {
   state.devices = [{ ...dev, id: uuid("dev") }, ...state.devices];
   save(LS.devices, state.devices);
@@ -214,22 +245,19 @@ export function deleteDevice(id) {
   save(LS.devices, state.devices);
   notify();
 }
-
 export function updateAlert(id, patch) {
   state.alerts = state.alerts.map((a) => (a.id === id ? { ...a, ...patch } : a));
   save(LS.alerts, state.alerts);
   notify();
 }
-
 export function addRecording(rec) {
   state.recordings = [{ ...rec, id: uuid("rec") }, ...state.recordings];
   save(LS.recordings, state.recordings);
   notify();
 }
-
 export function computeCounts() {
   const online = state.cameras.filter((c) => c.status === "online").length;
-  const alert = state.cameras.filter((c) => c.status === "alert").length;
+  const alert = state.cameras.filter((c) => c.status === "alert" || c.status === "alerting").length;
   const offline = state.cameras.filter((c) => c.status === "offline").length;
   const alertsOpen = state.alerts.filter((a) => a.status !== "resolved").length;
   const used = state.recordings.reduce((sum, r) => sum + (r.sizeBytes || 0), 0);

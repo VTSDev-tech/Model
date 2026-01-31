@@ -35,6 +35,7 @@ body {
 
 .recording-dot {
   animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 8px #ef4444; /* Thêm chút bóng đỏ cho chấm REC */
 }
 
 @keyframes pulse {
@@ -60,24 +61,41 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* ===== PHẦN ĐIỀU CHỈNH VIỀN ĐỎ (NÂNG CẤP TỪ CAMERA-ALERT) ===== */
 .camera-alert {
-  border: 2px solid #ef4444 !important;
-  animation: alertPulse 2s ease-in-out infinite;
+  border: 4px solid #ef4444 !important;
+  animation: alertBurn 1.5s ease-in-out infinite !important;
+  position: relative;
+  z-index: 50;
 }
 
-@keyframes alertPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-  50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+@keyframes alertBurn {
+  0%, 100% { 
+    box-shadow: 0 0 0px rgba(239, 68, 68, 0.7), inset 0 0 0px rgba(239, 68, 68, 0.4); 
+    border-color: #ef4444;
+  }
+  50% { 
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.9), inset 0 0 15px rgba(239, 68, 68, 0.6); 
+    border-color: #ff0000;
+  }
 }
 
 .alert-overlay {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.2);
   backdrop-filter: blur(1px);
   z-index: 10;
+  animation: alertFlash 1s infinite alternate;
+}
+
+@keyframes alertFlash {
+  from { opacity: 0.1; }
+  to { opacity: 0.4; }
 }
 
 .alert-badge {
   animation: alertBlink 1s ease-in-out infinite;
+  background: #ef4444 !important;
+  color: #fff !important;
 }
 
 @keyframes alertBlink {
@@ -85,6 +103,7 @@ body {
   50% { opacity: 0.3; }
 }
 
+/* ===== TIẾP TỤC CÁC CLASS CŨ ===== */
 .sidebar-item {
   transition: all 0.15s ease;
 }
@@ -96,6 +115,8 @@ body {
 .sidebar-item.active {
   background: #e0f2fe;
   border-left: 3px solid #0284c7;
+  color: #0369a1;
+  font-weight: 600;
 }
 
 .camera-video {
@@ -108,7 +129,7 @@ body {
   display: block;
 }
 
-/* ===== CAMERA ZOOM MODAL (GIỮ NGUYÊN PHẦN CŨ) ===== */
+/* ===== CAMERA ZOOM MODAL (GIỮ NGUYÊN) ===== */
 .cam-modal {
   position: fixed;
   inset: 0;
@@ -117,10 +138,12 @@ body {
   justify-content: center;
   padding: 24px;
   z-index: 9999;
+  transition: opacity 0.3s ease;
 }
 
 .cam-modal.active {
   display: flex;
+  opacity: 1;
 }
 
 .cam-modal__backdrop {
@@ -140,6 +163,12 @@ body {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.1);
   z-index: 10000;
+}
+
+/* Hiệu ứng viền đỏ cho Panel Modal khi có báo động */
+.cam-modal__panel:has(.is-alert) {
+  border: 4px solid #ef4444;
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
 }
 
 .cam-modal__header {
@@ -173,7 +202,7 @@ body {
   color: #374151;
   transition: all 0.2s ease;
   cursor: pointer;
-  border: none;
+  border: 1px solid #e5e7eb;
   background: transparent;
 }
 
@@ -214,7 +243,7 @@ body {
   bottom: 16px;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   padding: 6px 10px;
   border-radius: 6px;
@@ -255,30 +284,7 @@ body {
   background: #fff;
 }
 
-.cam-modal__status.is-offline {
-  background: #4b5563;
-  color: #f3f4f6;
-}
-
-.cam-modal__status.is-offline::before {
-  background: #9ca3af;
-  animation: none;
-}
-
-body.modal-open {
-  overflow: hidden;
-  padding-right: 0px;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* ============================================================
-   BỔ SUNG CÁC PHẦN MỚI TỪ FILE CSS MỚI NHẤT (KHÔNG THAY ĐỔI CŨ)
-   ============================================================ */
-
-/* App UI additions (tables, buttons, chips, etc.) */
+/* ===== APP UI COMPONENTS (TABLES, BUTTONS, CHIPS, ETC.) ===== */
 .page-header {
   display: flex;
   align-items: flex-end;
@@ -293,11 +299,6 @@ body.modal-open {
   color: #1f2937;
 }
 
-.page-subtitle {
-  margin-top: 4px;
-  color: #6b7280;
-}
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -308,16 +309,7 @@ body.modal-open {
   font-weight: 600;
   border: 1px solid #e5e7eb;
   transition: all .15s ease;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.06);
-}
-
-.btn:active {
-  transform: translateY(0);
-  box-shadow: none;
+  cursor: pointer;
 }
 
 .btn-primary {
@@ -326,57 +318,10 @@ body.modal-open {
   color: #fff;
 }
 
-.btn-primary:hover {
-  background: #0369a1;
-  border-color: #0369a1;
-}
-
 .btn-danger {
   background: #ef4444;
   border-color: #ef4444;
   color: #fff;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-  border-color: #dc2626;
-}
-
-.btn-secondary {
-  background: #fff;
-  color: #374151;
-}
-
-.btn-secondary:hover {
-  background: #f9fafb;
-}
-
-.input {
-  width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: .75rem;
-  padding: .6rem .75rem;
-  background: #fff;
-}
-
-.input:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(14,165,233,.25);
-  border-color: #0ea5e9;
-}
-
-.select {
-  width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: .75rem;
-  padding: .6rem .75rem;
-  background: #fff;
-}
-
-.select:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(14,165,233,.25);
-  border-color: #0ea5e9;
 }
 
 .chip {
@@ -392,16 +337,14 @@ body.modal-open {
 .chip-live { background: rgba(34,197,94,.10); color: #16a34a; }
 .chip-offline { background: rgba(107,114,128,.12); color: #374151; }
 .chip-alert { background: rgba(239,68,68,.10); color: #dc2626; }
-.chip-motion { background: rgba(59,130,246,.10); color: #2563eb; }
-.chip-cont { background: rgba(2,132,199,.10); color: #0369a1; }
 
 .table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  overflow: hidden;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
+  overflow: hidden;
 }
 
 .table th {
@@ -409,7 +352,6 @@ body.modal-open {
   font-size: 12px;
   color: #6b7280;
   font-weight: 700;
-  letter-spacing: .02em;
   padding: 12px 14px;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
@@ -422,14 +364,6 @@ body.modal-open {
   font-size: 14px;
 }
 
-.table tr:hover td {
-  background: #f9fafb;
-}
-
-.table tr:last-child td {
-  border-bottom: none;
-}
-
 .kpi-card {
   border: 1px solid #e5e7eb;
   background: #fff;
@@ -437,28 +371,11 @@ body.modal-open {
   padding: 14px;
 }
 
-.kpi-title { color: #6b7280; font-size: 12px; font-weight: 700; }
-.kpi-value { color: #111827; font-size: 20px; font-weight: 800; margin-top: 6px; }
-.kpi-sub { color: #9ca3af; font-size: 12px; margin-top: 2px; }
-
-.mini-bar {
-  height: 8px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: #e5e7eb;
-}
-
-.mini-bar > div {
-  height: 8px;
-  border-radius: 999px;
-  background: #0284c7;
-  width: 50%;
-}
-
-.divider {
-  height: 1px;
-  background: #e5e7eb;
-  width: 100%;
+.kpi-value {
+  color: #111827;
+  font-size: 20px;
+  font-weight: 800;
+  margin-top: 6px;
 }
 
 .badge-dot {
@@ -470,203 +387,8 @@ body.modal-open {
 
 .badge-green { background: #22c55e; }
 .badge-red { background: #ef4444; }
-.badge-gray { background: #9ca3af; }
 
-.toast {
-  border-radius: 14px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
-  padding: 12px 14px;
-  max-width: 340px;
-}
-
-.toast-title { font-weight: 800; color: #111827; font-size: 13px; }
-.toast-msg { margin-top: 2px; color: #4b5563; font-size: 13px; }
-
-.toast.success { border-color: rgba(34,197,94,.35); }
-.toast.danger { border-color: rgba(239,68,68,.35); }
-.toast.info { border-color: rgba(2,132,199,.35); }
-
-/* Improve camera grid performance */
-.camera-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Accessibility focus */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(14,165,233,.25);
-  border-radius: 12px;
-}
-
-/* ====== Modal (camera zoom / playback) - Cập nhật từ file mới ====== */
-.cam-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: none;
-  font-family: "Inter", sans-serif;
-}
-
-.cam-modal.active {
-  display: block;
-}
-
-.cam-modal__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(17,24,39,.75);
-  backdrop-filter: blur(2px);
-}
-
-.cam-modal__panel {
-  position: relative;
-  max-width: 980px;
-  width: calc(100% - 32px);
-  margin: 40px auto;
-  background: #fff;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 30px 80px rgba(0,0,0,.35);
-  border: 1px solid rgba(255,255,255,.15);
-}
-
-.cam-modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #fff;
-}
-
-.cam-modal__titleWrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.cam-modal__title {
-  font-weight: 800;
-  color: #111827;
-  font-size: 14px;
-}
-
-.cam-modal__meta {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.cam-modal__close {
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  border-radius: 12px;
-  padding: 8px;
-  transition: all .15s ease;
-}
-
-.cam-modal__close:hover {
-  background: #f9fafb;
-  transform: translateY(-1px);
-}
-
-.cam-modal__videoWrap {
-  position: relative;
-  background: #000;
-  aspect-ratio: 16/9;
-}
-
-.cam-modal__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cam-modal__offline {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,.75);
-  z-index: 20;
-}
-
-.cam-modal__time {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  z-index: 30;
-  background: rgba(0,0,0,.55);
-  padding: 6px 8px;
-  border-radius: 10px;
-  color: #fff;
-  font-size: 12px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.cam-modal__status {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 30;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: .03em;
-  background: rgba(255,255,255,.12);
-  color: #fff;
-}
-
-.cam-modal__status.is-live {
-  background: rgba(34,197,94,.2);
-  color: #bbf7d0;
-  border: 1px solid rgba(34,197,94,.25);
-}
-
-.cam-modal__status.is-alert {
-  background: rgba(239,68,68,.18);
-  color: #fecaca;
-  border: 1px solid rgba(239,68,68,.25);
-}
-
-.cam-modal__status.is-offline {
-  background: rgba(107,114,128,.18);
-  color: #e5e7eb;
-  border: 1px solid rgba(107,114,128,.25);
-}
-
-@media (max-width: 640px) {
-  .cam-modal__panel {
-    margin: 18px auto;
-  }
-}
-
-/* ============================================================
-   BỔ SUNG THÊM (CHOÁY HƠN - KHÔNG THAY ĐỔI CODE CŨ)
-   ============================================================ */
-
-/* Hiệu ứng mờ kính (Glassmorphism) cho Sidebar Active */
-.sidebar-item.active {
-  background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
-  color: #0369a1;
-  font-weight: 600;
-  box-shadow: inset 0 0 10px rgba(2, 132, 199, 0.05);
-}
-
-/* Thêm hiệu ứng Vignette cho Video để trông giống rạp phim */
+/* Các phần trang trí bổ sung bạn đã có */
 .camera-feed::after {
   content: "";
   position: absolute;
@@ -676,29 +398,5 @@ select:focus-visible {
   z-index: 6;
 }
 
-/* Nâng cấp hiệu ứng hover cho Card */
-.camera-card:hover .camera-video {
-  filter: contrast(1.1) saturate(1.2) brightness(1.1);
-  transition: filter 0.3s ease;
-}
-
-/* Hiệu ứng chuyển cảnh mượt cho Modal */
-.cam-modal {
-  opacity: 0;
-  transition: opacity 0.3s ease-out;
-}
-
-.cam-modal.active {
-  opacity: 1;
-}
-
-/* Badge trạng thái LIVE/REC tinh tế hơn */
-.recording-dot {
-  box-shadow: 0 0 8px #ef4444;
-}
-
-/* Tối ưu hóa phông chữ font mono cho thời gian */
-#current-time, .cam-modal__time {
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
+.hidden { display: none !important; }
+body.modal-open { overflow: hidden; }

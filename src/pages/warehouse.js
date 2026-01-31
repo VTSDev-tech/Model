@@ -6,20 +6,30 @@ import { navigate } from "../router.js";
 
 let selectedCamIndex = 0;
 
+/**
+ * Render chip trạng thái dựa trên status
+ */
 function chipForStatus(status) {
   if (status === "offline") return '<span class="chip chip-offline">OFFLINE</span>';
-  if (status === "alert") return '<span class="chip chip-alert">ALERT</span>';
+  if (status === "alert" || status === "alerting") return '<span class="chip chip-alert alert-badge">CẢNH BÁO</span>';
   return '<span class="chip chip-live">LIVE</span>';
 }
 
+/**
+ * Lọc danh sách khu vực
+ */
 function renderZoneOptions() {
   const { cameras } = getState();
   const zones = Array.from(new Set(cameras.map((c) => c.zone))).sort();
   const sel = qs("#warehouse-zone-filter");
   if (!sel) return;
-  sel.innerHTML = `<option value="all">Tất cả khu vực</option>` + zones.map((z) => `<option value="${z}">${z}</option>`).join("");
+  sel.innerHTML = `<option value="all">Tất cả khu vực</option>` + 
+    zones.map((z) => `<option value="${z}">${z}</option>`).join("");
 }
 
+/**
+ * Render lưới Camera với hiệu ứng báo động đỏ
+ */
 function renderGrid() {
   const { cameras } = getState();
   const grid = qs("#camera-grid");
@@ -31,13 +41,17 @@ function renderGrid() {
   grid.innerHTML = filtered.map((cam, i) => {
     const idx = cameras.findIndex((x) => x.id === cam.id);
     const isOffline = cam.status === "offline";
-    const isAlert = cam.status === "alert";
+    // Chấp nhận cả 2 loại status cảnh báo để đảm bảo viền đỏ luôn hiện
+    const isAlert = cam.status === "alert" || cam.status === "alerting"; 
 
     return `
-      <div class="camera-card bg-white rounded-xl overflow-hidden border ${isAlert ? "camera-alert border-gray-200" : isOffline ? "border-gray-300" : "border-gray-200"} cursor-pointer"
-           data-cam-index="${idx}">
+      <div class="camera-card bg-white rounded-xl overflow-hidden border ${
+        isAlert ? "camera-alert" : isOffline ? "border-gray-300" : "border-gray-200"
+      } cursor-pointer" data-cam-index="${idx}">
+        
         <div class="camera-feed aspect-video relative ${isOffline ? "opacity-60" : ""}">
-          ${isAlert ? '<div class="alert-overlay absolute inset-0 z-10"></div>' : ""}
+          ${isAlert ? '<div class="alert-overlay absolute inset-0 z-10 pointer-events-none"></div>' : ""}
+          
           ${isOffline ? '<div class="absolute inset-0 bg-gray-900/80 z-10"></div>' : ""}
 
           ${!isOffline ? `
@@ -73,26 +87,28 @@ function renderGrid() {
           </div>
 
           <div class="absolute bottom-2 right-2 z-20">
-            ${isOffline ? '<span class="chip chip-offline">OFFLINE</span>' : isAlert ? '<span class="chip chip-alert">CẢNH BÁO</span>' : '<span class="chip chip-live">LIVE</span>'}
+            ${isOffline ? '<span class="chip chip-offline">OFFLINE</span>' : 
+              isAlert ? '<span class="chip chip-alert alert-badge">CẢNH BÁO</span>' : 
+              '<span class="chip chip-live">LIVE</span>'}
           </div>
         </div>
 
         <div class="p-3 ${isAlert ? "bg-red-50" : isOffline ? "bg-gray-50" : ""}">
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <h4 class="font-medium ${isAlert ? "text-red-800" : isOffline ? "text-gray-500" : "text-gray-800"} text-sm">${cam.name}</h4>
+              <h4 class="font-bold ${isAlert ? "text-red-700" : isOffline ? "text-gray-500" : "text-gray-800"} text-sm">${cam.name}</h4>
               <p class="text-xs ${isAlert ? "text-red-600" : isOffline ? "text-gray-400" : "text-gray-500"}">${cam.location}</p>
 
-              ${isAlert && cam.alertType ? `
+              ${isAlert ? `
                 <div class="mt-1.5 flex items-center gap-1">
                   <span class="badge-dot badge-red"></span>
-                  <span class="text-xs font-medium text-red-600">${cam.alertType}</span>
+                  <span class="text-xs font-bold text-red-600 uppercase">Phát hiện đối tượng</span>
                 </div>
               ` : ""}
             </div>
 
             <button class="p-1.5 hover:bg-gray-100 rounded-lg transition flex-shrink-0" title="Phóng to">
-              <svg class="w-4 h-4 ${isAlert ? "text-red-600" : isOffline ? "text-gray-400" : "text-gray-500"}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 ${isAlert ? "text-red-600" : "text-gray-500"}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
               </svg>
@@ -103,6 +119,7 @@ function renderGrid() {
     `;
   }).join("");
 
+  // Gán sự kiện click cho từng card
   qsa(".camera-card", grid).forEach((card) => {
     card.addEventListener("click", () => {
       const idx = Number(card.getAttribute("data-cam-index"));
@@ -117,6 +134,9 @@ function updateTsInGrid() {
   });
 }
 
+/**
+ * Hiển thị Modal chi tiết camera
+ */
 function openCameraModal(idx) {
   const { cameras } = getState();
   const cam = cameras[idx];
@@ -128,16 +148,18 @@ function openCameraModal(idx) {
   qs("#modal-time").textContent = formatDateTime(Date.now());
 
   const badge = qs("#modal-status");
-  const statusText = cam.status === "alert" ? "CẢNH BÁO" : cam.status === "offline" ? "OFFLINE" : "LIVE";
+  const isAlert = cam.status === "alert" || cam.status === "alerting";
+  const statusText = isAlert ? "CẢNH BÁO" : cam.status === "offline" ? "OFFLINE" : "LIVE";
+  
   badge.textContent = statusText;
   badge.classList.remove("is-live", "is-alert", "is-offline");
-  badge.classList.add(cam.status === "alert" ? "is-alert" : cam.status === "offline" ? "is-offline" : "is-live");
+  badge.classList.add(isAlert ? "is-alert" : cam.status === "offline" ? "is-offline" : "is-live");
 
-  // SỬA ĐỔI: Xử lý hiển thị iframe trong Modal phóng to
+  // Xử lý hiển thị video trong Modal
   const videoElement = qs("#modal-video");
   const offline = qs("#modal-offline");
   
-  // Tạo hoặc tìm container cho iframe trong modal
+  // Container cho iframe trong modal
   let container = qs(".modal-video-container");
   if (!container && videoElement) {
     container = videoElement.parentElement;
@@ -165,7 +187,7 @@ function openCameraModal(idx) {
 
 function closeCameraModal() {
   const container = qs(".modal-video-container");
-  if (container) container.innerHTML = ""; // Xóa iframe khi đóng để tiết kiệm tài nguyên
+  if (container) container.innerHTML = ""; 
   closeModal("#camera-modal");
 }
 
@@ -215,7 +237,9 @@ export function initWarehousePage() {
     renderGrid();
   });
 
-  setInterval(updateTsInGrid, 1000);
+  // Cập nhật thời gian mỗi giây
+  if (window.warehouseTimer) clearInterval(window.warehouseTimer);
+  window.warehouseTimer = setInterval(updateTsInGrid, 1000);
 }
 
 export function refreshWarehouse() {

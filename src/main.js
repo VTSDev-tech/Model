@@ -1,4 +1,3 @@
-
 import { qs } from "./utils.js";
 import { initStore, subscribe, computeCounts, getState } from "./store.js";
 import { initRouter, navigate } from "./router.js";
@@ -11,6 +10,20 @@ import { initSettingsPage, refreshSettings } from "./pages/settings.js";
 import { initDevicesPage, refreshDevices } from "./pages/devices.js";
 import { initSupportPage, refreshSupport } from "./pages/support.js";
 import { formatDateTime } from "./utils.js";
+
+// --- PHẦN BỔ SUNG ĐỂ XỬ LÝ NÚT XÓA VÀ FIX LỖI DỮ LIỆU ---
+window.handleClearAlerts = function() {
+  if (confirm("Bạn có chắc chắn muốn xóa sạch toàn bộ lịch sử cảnh báo?")) {
+    // 1. Xóa dữ liệu trong LocalStorage
+    localStorage.removeItem('thu_alerts');
+    localStorage.removeItem('camera_alerts');
+    
+    // 2. Thông báo và tải lại trang để làm sạch bộ nhớ (Store)
+    alert("Đã dọn dẹp hệ thống thành công!");
+    window.location.reload();
+  }
+};
+// -------------------------------------------------------
 
 function updateHeaderClock() {
   qs("#current-time").textContent = formatDateTime(Date.now());
@@ -79,11 +92,8 @@ function refreshCurrentPage({ page, payload }) {
   if (page === "warehouse") {
     refreshWarehouse();
     if (payload?.openCamId) {
-      // Open camera modal by simulating click: find card and click
       setTimeout(() => {
         const card = document.querySelector(`[data-cam-index][data-cam-id="${payload.openCamId}"]`);
-        // In our implementation cards use data-cam-index only; open handled by warehouse module.
-        // We'll just navigate and let user click; keep it simple (no DOM coupling).
       }, 100);
     }
   }
@@ -102,13 +112,11 @@ function boot() {
   updateSidebarStats();
   updateHeaderClock();
 
-  // optional ElementSDK integration (won't crash if missing)
   try {
     if (window.elementSdk?.init) {
       window.elementSdk.init({
         defaultConfig: {},
         onConfigChange: (cfg) => {
-          // You can map element SDK config into settings if needed later
           console.log("elementSdk config:", cfg);
         },
       });
@@ -123,7 +131,6 @@ function boot() {
     },
   });
 
-  // Hash navigation
   const hash = (location.hash || "").replace("#", "");
   if (hash) navigate(hash, { silent: true });
 }
