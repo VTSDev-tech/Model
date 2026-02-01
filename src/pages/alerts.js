@@ -1,4 +1,3 @@
-
 import { qs, qsa, formatDateTime } from "../utils.js";
 import { getState, updateAlert, trafficVideoForCamId } from "../store.js";
 import { toast } from "../components/toast.js";
@@ -9,20 +8,23 @@ let list = [];
 let current = null;
 
 function chipSeverity(s) {
-  if (s === "high") return '<span class="chip chip-alert">HIGH</span>';
-  if (s === "medium") return '<span class="chip chip-motion">MED</span>';
+  const sev = (s || "").toLowerCase();
+  if (sev === "high") return '<span class="chip chip-alert">HIGH</span>';
+  if (sev === "medium") return '<span class="chip chip-motion">MED</span>';
   return '<span class="chip chip-offline">LOW</span>';
 }
+
 function chipStatus(st) {
-  if (st === "new") return '<span class="chip chip-alert">NEW</span>';
-  if (st === "ack") return '<span class="chip chip-motion">ACK</span>';
+  const status = (st || "").toLowerCase();
+  if (status === "new") return '<span class="chip chip-alert">NEW</span>';
+  if (status === "ack") return '<span class="chip chip-motion">ACK</span>';
   return '<span class="chip chip-live">RESOLVED</span>';
 }
 
 function render() {
   const root = qs("#alerts-root");
   const st = getState();
-  const cams = st.cameras;
+  const cams = st.cameras || [];
 
   const camOptions = [`<option value="all">Tất cả camera</option>`]
     .concat(cams.map((c) => `<option value="${c.id}">${c.id} - ${c.name}</option>`))
@@ -83,7 +85,6 @@ function render() {
       </div>
     </div>
 
-    <!-- Alert detail -->
     <div class="mt-4 grid grid-cols-3 gap-4">
       <div class="col-span-2 bg-white border border-gray-200 rounded-2xl p-4">
         <div class="flex items-center justify-between">
@@ -149,6 +150,7 @@ function render() {
 
 function applyFilter() {
   const st = getState();
+  const cams = st.cameras || [];
   const status = qs("#al-status")?.value || "all";
   const cam = qs("#al-cam")?.value || "all";
   const sev = qs("#al-sev")?.value || "all";
@@ -158,21 +160,38 @@ function applyFilter() {
   if (status !== "all") filtered = filtered.filter((a) => a.status === status);
   if (cam !== "all") filtered = filtered.filter((a) => a.camId === cam);
   if (sev !== "all") filtered = filtered.filter((a) => a.severity === sev);
-  if (q) filtered = filtered.filter((a) => (a.type + " " + a.zone + " " + a.camName).toLowerCase().includes(q));
+  if (q) filtered = filtered.filter((a) => {
+    const name = a.camName || "";
+    const zone = a.zone || "";
+    const type = a.type || "";
+    return (type + " " + zone + " " + name).toLowerCase().includes(q);
+  });
 
   list = filtered;
   const body = qs("#al-body");
-  body.innerHTML = list.slice(0, 80).map((a, idx) => `
-    <tr data-idx="${idx}">
-      <td class="font-mono text-xs">${formatDateTime(a.ts)}</td>
-      <td><div class="font-semibold">${a.camId}</div><div class="text-xs text-gray-500">${a.camName}</div></td>
-      <td class="text-sm text-gray-700">${a.zone}</td>
-      <td class="text-sm text-gray-800">${a.type}</td>
-      <td>${chipSeverity(a.severity)}</td>
-      <td>${chipStatus(a.status)}</td>
-      <td><button class="btn btn-secondary text-xs" data-view="${idx}">Xem</button></td>
-    </tr>
-  `).join("");
+  if (!body) return;
+
+  body.innerHTML = list.slice(0, 80).map((a, idx) => {
+    // Tìm camera info để tránh undefined
+    const cInfo = cams.find(c => c.id === a.camId) || {};
+    // Đảm bảo timestamp hợp lệ
+    const timestamp = a.ts || a.timestamp || Date.now();
+    
+    return `
+      <tr data-idx="${idx}">
+        <td class="font-mono text-xs">${formatDateTime(timestamp)}</td>
+        <td>
+          <div class="font-semibold">${a.camId || "N/A"}</div>
+          <div class="text-xs text-gray-500">${a.camName || cInfo.name || ""}</div>
+        </td>
+        <td class="text-sm text-gray-700">${a.zone || cInfo.zone || "---"}</td>
+        <td class="text-sm text-gray-800">${a.type || "Cảnh báo"}</td>
+        <td>${chipSeverity(a.severity)}</td>
+        <td>${chipStatus(a.status)}</td>
+        <td><button class="btn btn-secondary text-xs" data-view="${idx}">Xem</button></td>
+      </tr>
+    `;
+  }).join("");
 
   qs("#al-count").textContent = `Hiển thị ${Math.min(80, list.length)} / ${list.length} cảnh báo`;
 
@@ -188,21 +207,28 @@ function selectAlert(i) {
   current = list[i];
   if (!current) return;
 
+  const st = getState();
+  const cInfo = st.cameras.find(c => c.id === current.camId) || {};
+
   qs("#al-video-empty").classList.add("hidden");
   const v = qs("#al-video");
   v.src = trafficVideoForCamId(current.camId);
   v.play().catch(() => {});
-  qs("#al-d-type").textContent = current.type;
-  qs("#al-d-time").textContent = formatDateTime(current.ts);
-  qs("#al-d-sev").innerHTML = current.severity.toUpperCase();
-  qs("#al-d-zone").textContent = current.zone;
-  qs("#al-d-status").textContent = current.status.toUpperCase();
-  qs("#al-d-cam").textContent = `${current.camId} • ${current.camName}`;
+  
+  qs("#al-d-type").textContent = current.type || "Cảnh báo";
+  qs("#al-d-time").textContent = formatDateTime(current.ts || current.timestamp || Date.now());
+  qs("#al-d-sev").innerHTML = (current.severity || "LOW").toUpperCase();
+  qs("#al-d-zone").textContent = current.zone || cInfo.zone || "---";
+  qs("#al-d-status").textContent = (current.status || "NEW").toUpperCase();
+  qs("#al-d-cam").textContent = `${current.camId} • ${current.camName || cInfo.name || ""}`;
 
   qs("#al-note").value = current.note || "";
 
   // enable buttons
-  ["#al-open-cam", "#al-play", "#al-ack", "#al-resolve", "#al-save-note"].forEach((s) => qs(s).disabled = false);
+  ["#al-open-cam", "#al-play", "#al-ack", "#al-resolve", "#al-save-note"].forEach((s) => {
+    const el = qs(s);
+    if(el) el.disabled = false;
+  });
 }
 
 function wire() {
@@ -230,12 +256,14 @@ function wire() {
     if (!current) return;
     updateAlert(current.id, { status: "ack" });
     toast({ title: "Xác nhận", message: "Đã xác nhận cảnh báo", variant: "success" });
+    applyFilter(); // Cập nhật lại giao diện sau khi update
   });
 
   qs("#al-resolve")?.addEventListener("click", () => {
     if (!current) return;
     updateAlert(current.id, { status: "resolved" });
     toast({ title: "Đã xử lý", message: "Cảnh báo được đánh dấu đã xử lý", variant: "success" });
+    applyFilter(); // Cập nhật lại giao diện sau khi update
   });
 
   qs("#al-save-note")?.addEventListener("click", () => {
@@ -257,9 +285,12 @@ function wire() {
 }
 
 function openPlaybackFromAlert() {
+  const st = getState();
+  const cInfo = st.cameras.find(c => c.id === current.camId) || {};
+  
   qs("#playback-title").textContent = `Playback • ${current.camId}`;
-  qs("#playback-meta").textContent = `${current.zone} • ALERT • ${current.type}`;
-  qs("#playback-time").textContent = formatDateTime(current.ts);
+  qs("#playback-meta").textContent = `${current.zone || cInfo.zone || ""} • ALERT • ${current.type || ""}`;
+  qs("#playback-time").textContent = formatDateTime(current.ts || current.timestamp || Date.now());
   qs("#playback-badge").textContent = "ALERT PLAYBACK";
 
   const v = qs("#playback-video");
@@ -271,9 +302,11 @@ function openPlaybackFromAlert() {
 
 function closePlayback() {
   const v = qs("#playback-video");
-  v.pause();
-  v.removeAttribute("src");
-  v.load();
+  if(v) {
+    v.pause();
+    v.removeAttribute("src");
+    v.load();
+  }
   closeModal("#playback-modal");
 }
 

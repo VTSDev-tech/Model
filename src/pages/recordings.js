@@ -1,6 +1,5 @@
-
 import { qs, qsa, formatDateTime, formatBytes } from "../utils.js";
-import { getState, trafficVideoForCamId } from "../store.js";
+import { getState, trafficVideoForCamId, logAction } from "../store.js"; // Đã thêm logAction vào đây
 import { openModal, closeModal, wireModal } from "../components/modal.js";
 import { toast } from "../components/toast.js";
 
@@ -8,14 +7,15 @@ let currentList = [];
 let currentIndex = 0;
 
 function chipEvent(ev) {
-  if (ev === "alert") return '<span class="chip chip-alert">ALERT</span>';
-  if (ev === "motion") return '<span class="chip chip-motion">MOTION</span>';
+  const event = (ev || "").toLowerCase();
+  if (event === "alert") return '<span class="chip chip-alert">ALERT</span>';
+  if (event === "motion") return '<span class="chip chip-motion">MOTION</span>';
   return '<span class="chip chip-cont">CONT</span>';
 }
 
 function renderFilters(payload) {
   const st = getState();
-  const cams = st.cameras;
+  const cams = st.cameras || [];
 
   const camOptions = [`<option value="all">Tất cả camera</option>`]
     .concat(cams.map((c) => `<option value="${c.id}">${c.id} - ${c.name}</option>`))
@@ -78,9 +78,9 @@ function renderFilters(payload) {
     </div>
   `;
 
-  // apply payload filter (from camera modal)
   if (payload?.camId) {
-    qs("#rec-cam").value = payload.camId;
+    const el = qs("#rec-cam");
+    if (el) el.value = payload.camId;
   }
 }
 
@@ -91,7 +91,7 @@ function applyFilter() {
   const type = qs("#rec-type")?.value || "all";
   const q = (qs("#rec-q")?.value || "").toLowerCase().trim();
 
-  let list = st.recordings.slice();
+  let list = (st.recordings || []).slice();
   if (cam !== "all") list = list.filter((r) => r.camId === cam);
   if (zone !== "all") list = list.filter((r) => r.zone === zone);
   if (type !== "all") list = list.filter((r) => r.eventType === type);
@@ -108,19 +108,33 @@ function renderTable() {
   const body = qs("#rec-body");
   if (!body) return;
 
-  body.innerHTML = currentList.slice(0, 60).map((r, idx) => `
-    <tr data-idx="${idx}">
-      <td class="font-mono text-xs text-gray-700">${formatDateTime(r.startTs)}</td>
-      <td><div class="font-semibold text-gray-800">${r.camId}</div><div class="text-xs text-gray-500">${r.camName}</div></td>
-      <td class="text-sm text-gray-700">${r.zone}</td>
-      <td>${chipEvent(r.eventType)}</td>
-      <td class="text-sm text-gray-700">${r.durationSec}s</td>
-      <td class="text-sm text-gray-700">${formatBytes(r.sizeBytes)}</td>
-      <td><button class="btn btn-primary text-xs" data-play="${idx}">Phát lại</button></td>
-    </tr>
-  `).join("");
+  const st = getState();
+  const cams = st.cameras || [];
+
+  body.innerHTML = currentList.slice(0, 60).map((r, idx) => {
+    const cInfo = cams.find(c => c.id === r.camId) || {};
+    const timestamp = r.startTs || r.ts || r.timestamp || Date.now();
+    const duration = r.durationSec !== undefined ? r.durationSec : (r.duration || 0);
+    const size = r.sizeBytes !== undefined ? r.sizeBytes : (r.size || 0);
+
+    return `
+      <tr data-idx="${idx}">
+        <td class="font-mono text-xs text-gray-700">${formatDateTime(timestamp)}</td>
+        <td>
+          <div class="font-semibold text-gray-800">${r.camId || "N/A"}</div>
+          <div class="text-xs text-gray-500">${r.camName || cInfo.name || ""}</div>
+        </td>
+        <td class="text-sm text-gray-700">${r.zone || cInfo.zone || "---"}</td>
+        <td>${chipEvent(r.eventType || r.type)}</td>
+        <td class="text-sm text-gray-700">${duration}s</td>
+        <td class="text-sm text-gray-700">${formatBytes(size)}</td>
+        <td><button class="btn btn-primary text-xs" data-play="${idx}">Phát lại</button></td>
+      </tr>
+    `;
+  }).join("");
 
   qs("#rec-count").textContent = `Hiển thị ${Math.min(60, currentList.length)} / ${currentList.length} bản ghi`;
+  
   qsa("[data-play]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const i = Number(btn.getAttribute("data-play"));
@@ -134,23 +148,38 @@ function openPlayback(i) {
   const r = currentList[i];
   if (!r) return;
 
-  qs("#playback-title").textContent = `Playback • ${r.camId}`;
-  qs("#playback-meta").textContent = `${r.zone} • ${r.eventType.toUpperCase()} • ${r.durationSec}s`;
-  qs("#playback-time").textContent = formatDateTime(r.startTs);
+  const st = getState();
+  const cInfo = st.cameras.find(c => c.id === r.camId) || {};
+  const timestamp = r.startTs || r.ts || r.timestamp || Date.now();
+
+  // --- GHI LOG KHI NHẤN XEM ---
+  logAction("XEM_GHI_HINH", { 
+    camId: r.camId, 
+    zone: r.zone || cInfo.zone, 
+    time: formatDateTime(timestamp) 
+  });
+
+  qs("#playback-title").textContent = `Playback • ${r.camId || "N/A"}`;
+  qs("#playback-meta").textContent = `${r.zone || cInfo.zone || "---"} • ${(r.eventType || "CONT").toUpperCase()} • ${r.durationSec || 0}s`;
+  qs("#playback-time").textContent = formatDateTime(timestamp);
   qs("#playback-badge").textContent = "PLAYBACK";
 
   const v = qs("#playback-video");
-  v.src = trafficVideoForCamId(r.camId);
-  v.play().catch(() => {});
+  if (v) {
+    v.src = trafficVideoForCamId(r.camId);
+    v.play().catch(() => {});
+  }
 
   openModal("#playback-modal");
 }
 
 function closePlayback() {
   const v = qs("#playback-video");
-  v.pause();
-  v.removeAttribute("src");
-  v.load();
+  if (v) {
+    v.pause();
+    v.removeAttribute("src");
+    v.load();
+  }
   closeModal("#playback-modal");
 }
 

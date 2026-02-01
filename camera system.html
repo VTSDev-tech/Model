@@ -384,7 +384,10 @@
                 </div>
             </div>
             <div class="cam-modal__videoWrap">
+                <div id="modal-alert-overlay" class="alert-overlay hidden"></div> 
+                
                 <video id="modal-video" class="cam-modal__video" autoplay muted loop playsinline preload="metadata"></video>
+                
                 <div id="modal-offline" class="cam-modal__offline hidden">
                     <div class="text-center">
                         <svg class="w-20 h-20 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,6 +397,9 @@
                         <p class="text-gray-300 text-sm mt-1">Không thể xem luồng live</p>
                     </div>
                 </div>
+
+                <div id="modal-alert-badge" class="alert-badge hidden" style="position: absolute; top: 16px; right: 100px;">CẢNH BÁO</div>
+                
                 <div id="modal-time" class="cam-modal__time"></div>
                 <div id="modal-status" class="cam-modal__status is-live">LIVE</div>
             </div>
@@ -491,7 +497,7 @@
 
         function handleClearAlerts() {
             if (confirm("Bạn có chắc chắn muốn xóa sạch toàn bộ lịch sử cảnh báo?")) {
-                localStorage.clear(); // Xóa sạch bộ nhớ đệm để hết lỗi undefined
+                localStorage.clear(); 
                 alert("Hệ thống đã dọn dẹp sạch sẽ!");
                 window.location.reload();
             }

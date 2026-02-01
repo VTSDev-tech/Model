@@ -11,133 +11,139 @@ import { initDevicesPage, refreshDevices } from "./pages/devices.js";
 import { initSupportPage, refreshSupport } from "./pages/support.js";
 import { formatDateTime } from "./utils.js";
 
-// --- PHẦN BỔ SUNG ĐỂ XỬ LÝ NÚT XÓA VÀ FIX LỖI DỮ LIỆU ---
+// --- XỬ LÝ DỌN DẸP DỮ LIỆU ---
 window.handleClearAlerts = function() {
-  if (confirm("Bạn có chắc chắn muốn xóa sạch toàn bộ lịch sử cảnh báo?")) {
-    // 1. Xóa dữ liệu trong LocalStorage
-    localStorage.removeItem('thu_alerts');
-    localStorage.removeItem('camera_alerts');
-    
-    // 2. Thông báo và tải lại trang để làm sạch bộ nhớ (Store)
-    alert("Đã dọn dẹp hệ thống thành công!");
-    window.location.reload();
-  }
+    if (confirm("Bạn có chắc chắn muốn xóa sạch toàn bộ lịch sử cảnh báo?")) {
+        // Xóa LocalStorage
+        localStorage.removeItem('thu_alerts');
+        localStorage.removeItem('camera_alerts');
+        
+        // Thay vì reload(), ta nên reset Store nếu store.js hỗ trợ
+        // Ở đây tạm thời dùng reload để đảm bảo sạch triệt để các biến global
+        window.location.reload();
+    }
 };
-// -------------------------------------------------------
 
+// --- CẬP NHẬT ĐỒNG HỒ ---
 function updateHeaderClock() {
-  qs("#current-time").textContent = formatDateTime(Date.now());
+    const el = qs("#current-time");
+    if (el) el.textContent = formatDateTime(Date.now());
 }
 setInterval(updateHeaderClock, 1000);
 
+// --- CẬP NHẬT UI THEO SETTINGS ---
 function applySettingsToUI() {
-  const st = getState();
-  qs("#system-title").textContent = st.settings.system_title || "Hệ Thống Quản Lý Camera";
-  qs("#warehouse-title").textContent = st.settings.warehouse_name || "Camera Nhà Kho";
-  qs("#system-subtitle").textContent = st.settings.subtitle || "Giám sát an ninh tập trung";
-  // basic accent color (sidebar storage bar)
-  const bar = qs("#sidebar-storage-bar");
-  if (bar) bar.style.background = st.settings.accent_color || "#0284c7";
+    const st = getState();
+    if (!st.settings) return;
+
+    if (qs("#system-title")) qs("#system-title").textContent = st.settings.system_title || "ORANGE MANAGEMENT";
+    if (qs("#warehouse-title")) qs("#warehouse-title").textContent = st.settings.warehouse_name || "Camera Nhà Kho";
+    if (qs("#system-subtitle")) qs("#system-subtitle").textContent = st.settings.subtitle || "Giám sát an ninh tập trung";
+    
+    const bar = qs("#sidebar-storage-bar");
+    if (bar) bar.style.background = st.settings.accent_color || "#0284c7";
 }
 
+// --- CẬP NHẬT TRẠNG THÁI SIDEBAR & HỆ THỐNG ---
 function updateSidebarStats() {
-  const c = computeCounts();
-  qs("#sidebar-online").textContent = c.online;
-  qs("#sidebar-alert").textContent = c.alert;
-  qs("#sidebar-offline").textContent = c.offline;
+    const c = computeCounts();
+    
+    // Cập nhật số lượng camera theo trạng thái
+    if (qs("#sidebar-online")) qs("#sidebar-online").textContent = c.online;
+    if (qs("#sidebar-alert")) qs("#sidebar-alert").textContent = c.alert;
+    if (qs("#sidebar-offline")) qs("#sidebar-offline").textContent = c.offline;
 
-  const usedGB = c.usedBytes / 1024 ** 3;
-  const totalGB = c.totalBytes / 1024 ** 3;
-  const pct = Math.min(100, Math.round((c.usedBytes / Math.max(1, c.totalBytes)) * 100));
-  qs("#sidebar-storage-text").textContent = `${usedGB.toFixed(1)} / ${totalGB.toFixed(0)} GB`;
-  qs("#sidebar-storage-bar").style.width = pct + "%";
+    // Cập nhật dung lượng
+    const usedGB = c.usedBytes / 1024 ** 3;
+    const totalGB = c.totalBytes / 1024 ** 3;
+    const pct = Math.min(100, Math.round((c.usedBytes / Math.max(1, c.totalBytes)) * 100));
+    
+    if (qs("#sidebar-storage-text")) qs("#sidebar-storage-text").textContent = `${usedGB.toFixed(1)} / ${totalGB.toFixed(0)} GB`;
+    if (qs("#sidebar-storage-bar")) qs("#sidebar-storage-bar").style.width = pct + "%";
 
-  const badge = qs("#sidebar-alert-badge");
-  if (badge) {
-    if (c.alertsOpen > 0) {
-      badge.textContent = String(c.alertsOpen);
-      badge.classList.remove("hidden");
-    } else {
-      badge.classList.add("hidden");
+    // Cập nhật Badge cảnh báo đỏ ở sidebar
+    const badge = qs("#sidebar-alert-badge");
+    if (badge) {
+        if (c.alertsOpen > 0) {
+            badge.textContent = String(c.alertsOpen);
+            badge.classList.remove("hidden");
+        } else {
+            badge.classList.add("hidden");
+        }
     }
-  }
 
-  // health indicator
-  const dot = qs("#system-health-dot");
-  const text = qs("#system-health-text");
-  if (c.offline > 0) {
-    dot.classList.remove("bg-green-500");
-    dot.classList.add("bg-red-500");
-    text.textContent = `Có ${c.offline} camera offline`;
-  } else {
-    dot.classList.remove("bg-red-500");
-    dot.classList.add("bg-green-500");
-    text.textContent = "Hệ thống hoạt động bình thường";
-  }
+    // Cập nhật đèn tín hiệu sức khỏe hệ thống
+    const dot = qs("#system-health-dot");
+    const text = qs("#system-health-text");
+    if (dot && text) {
+        if (c.offline > 0) {
+            dot.className = "w-2 h-2 bg-red-500 rounded-full animate-pulse";
+            text.textContent = `Có ${c.offline} camera mất kết nối`;
+        } else {
+            dot.className = "w-2 h-2 bg-green-500 rounded-full";
+            text.textContent = "Hệ thống hoạt động bình thường";
+        }
+    }
 }
 
+// --- KHỞI TẠO CÁC TRANG ---
 function initAllPages() {
-  initWarehousePage();
-  initReportsPage();
-  initRecordingsPage();
-  initAlertsPage();
-  initUsersPage();
-  initSettingsPage();
-  initDevicesPage();
-  initSupportPage();
+    initWarehousePage();
+    initReportsPage();
+    initRecordingsPage();
+    initAlertsPage();
+    initUsersPage();
+    initSettingsPage();
+    initDevicesPage();
+    initSupportPage();
 }
 
+// --- REFRESH DỮ LIỆU KHI CHUYỂN TRANG ---
 function refreshCurrentPage({ page, payload }) {
-  // payload used for recordings filter and warehouse open cam
-  if (page === "warehouse") {
-    refreshWarehouse();
-    if (payload?.openCamId) {
-      setTimeout(() => {
-        const card = document.querySelector(`[data-cam-index][data-cam-id="${payload.openCamId}"]`);
-      }, 100);
+    switch (page) {
+        case "warehouse":
+            refreshWarehouse();
+            break;
+        case "reports": refreshReports(); break;
+        case "recordings": refreshRecordings(payload); break;
+        case "alerts": refreshAlerts(); break;
+        case "users": refreshUsers(); break;
+        case "settings": refreshSettings(); break;
+        case "devices": refreshDevices(); break;
+        case "support": refreshSupport(); break;
     }
-  }
-  if (page === "reports") refreshReports();
-  if (page === "recordings") refreshRecordings(payload);
-  if (page === "alerts") refreshAlerts();
-  if (page === "users") refreshUsers();
-  if (page === "settings") refreshSettings();
-  if (page === "devices") refreshDevices();
-  if (page === "support") refreshSupport();
 }
 
+// --- BOOTSTRAP ---
 function boot() {
-  initStore();
-  applySettingsToUI();
-  updateSidebarStats();
-  updateHeaderClock();
+    initStore(); // Load dữ liệu từ localStorage vào bộ nhớ
+    applySettingsToUI();
+    updateSidebarStats();
+    updateHeaderClock();
 
-  try {
-    if (window.elementSdk?.init) {
-      window.elementSdk.init({
-        defaultConfig: {},
-        onConfigChange: (cfg) => {
-          console.log("elementSdk config:", cfg);
+    initAllPages();
+
+    // Khởi tạo Router
+    initRouter({
+        onNavigate: ({ page, payload }) => {
+            refreshCurrentPage({ page, payload });
         },
-      });
+    });
+
+    // Kiểm tra URL hash để điều hướng đúng trang khi F5
+    const hash = (location.hash || "").replace("#", "");
+    if (hash) {
+        navigate(hash, { silent: true });
+    } else {
+        navigate("warehouse", { silent: true }); // Mặc định vào kho
     }
-  } catch {}
-
-  initAllPages();
-
-  initRouter({
-    onNavigate: ({ page, payload }) => {
-      refreshCurrentPage({ page, payload });
-    },
-  });
-
-  const hash = (location.hash || "").replace("#", "");
-  if (hash) navigate(hash, { silent: true });
 }
 
+// Đăng ký lắng nghe thay đổi từ Store để cập nhật UI tự động
 subscribe(() => {
-  applySettingsToUI();
-  updateSidebarStats();
+    applySettingsToUI();
+    updateSidebarStats();
 });
 
+// Chạy hệ thống
 boot();
